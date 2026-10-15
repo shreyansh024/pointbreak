@@ -71,7 +71,7 @@ button{cursor:pointer}
 .btn-wake{flex:1 1 200px;min-height:64px;border:0;border-radius:14px;background:var(--gold);color:#1B1022;font-weight:600;font-size:1.15rem}
 .btn-bed{flex:0 1 auto;min-height:64px;border:1px solid color-mix(in srgb,var(--bg) 35%,transparent);background:transparent;color:var(--bg);border-radius:14px;padding:0 16px}
 .wake .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.wake .stat b{display:block;font-family:var(--f-mono);font-size:1.25rem;font-weight:500}
+.wake .stat b{display:block;font-family:var(--f-mono);font-size:1.05rem;font-weight:500;white-space:nowrap}
 .wake .stat span{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;opacity:.7}
 .wake svg{width:100%;height:56px;display:block}
 
@@ -243,7 +243,8 @@ const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
 const todayKey=()=>key(new Date());
 const fmtDay=k=>parse(k).toLocaleDateString("en-IN",{weekday:"short",day:"numeric",month:"short"});
 const toMin=hm=>{if(!hm)return null;const[h,m]=hm.split(":").map(Number);return h*60+m};
-const fromMin=m=>m==null?"--:--":pad(Math.floor(m/60)%24)+":"+pad(Math.round(m%60));
+const t12=v=>{if(!v)return "";const[h,m]=v.split(":").map(Number);return ((h%12)||12)+":"+pad(m)+" "+(h<12?"AM":"PM")};   // stored 24h, shown 12h
+const fromMin=m=>{if(m==null)return "--:--";m=Math.round(m)%1440;return t12(pad(Math.floor(m/60))+":"+pad(m%60))};
 const hm=d=>pad(d.getHours())+":"+pad(d.getMinutes());
 const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
 const list=c=>Object.entries(S[c]).map(([id,v])=>Object.assign({id},v));
@@ -279,7 +280,7 @@ async function loadRates(){
     const txt=await res.text();
     const rows=txt.split(/\r?\n/).map(l=>l.replace(/^\t/,"").split("\t").map(c=>c.trim()));
     for(const [id,spec] of Object.entries(ROWS))showRate(id,rows.find(r=>r[1]===spec.name),spec);
-    $("r-at").textContent=hm(new Date());
+    $("r-at").textContent=t12(hm(new Date()));
   }catch(e){$("r-at").textContent="offline"}
 }
 
@@ -320,8 +321,8 @@ function wakeStats(){
 }
 function renderWake(){
   const r=S.wake[todayKey()];
-  $("st-today").textContent=r&&r.woke?r.woke:"--:--";
-  $("btn-wake").textContent=r&&r.woke?"Awake since "+r.woke:"I'm awake";
+  $("st-today").textContent=r&&r.woke?t12(r.woke):"--:--";
+  $("btn-wake").textContent=r&&r.woke?"Awake since "+t12(r.woke):"I'm awake";
   const s=wakeStats();$("st-avg").textContent=fromMin(s.avgWake);$("st-bed").textContent=fromMin(s.avgBed);
   const t=parse(todayKey()),pts=[];
   for(let i=13;i>=0;i--){const r2=S.wake[key(addDays(t,-i))];if(r2&&r2.woke)pts.push([(13-i)*(280/13)+10,toMin(r2.woke)])}
@@ -337,7 +338,7 @@ function taskRow(t,o={}){
   return '<div class="task b-'+esc(t.biz)+(done?" done":"")+'">'+
     '<button class="check" aria-label="'+(done?"Mark not done":"Mark done")+'" data-act="'+(o.routine?"rtoggle":"toggle")+'" data-id="'+esc(t.id)+'" data-day="'+esc(o.day||"")+'"></button>'+
     '<div class="t"><div class="title">'+esc(t.title)+'</div><div class="meta"><span class="biz">'+(BIZ[t.biz]||"Life")+'</span>'+
-    (t.time?'<span class="mono">'+esc(t.time)+'</span>':'')+(o.routine?'<span>Every day</span>':'')+'</div></div>'+
+    (t.time?'<span class="mono">'+esc(t12(t.time))+'</span>':'')+(o.routine?'<span>Every day</span>':'')+'</div></div>'+
     '<div class="acts">'+
     (!o.routine&&!done?'<button class="ic" data-act="tomorrow" data-id="'+esc(t.id)+'" aria-label="Move to next day">→</button>':'')+
     (S.pendingDel===t.id?'<button class="ic danger" data-act="del" data-id="'+esc(t.id)+'" data-kind="'+(o.routine?"routines":"tasks")+'">Delete?</button>'
@@ -374,7 +375,7 @@ function dayBlock(k,rel){
   if(!ts.length&&!ev.length&&!w)return "";
   return '<div class="day" id="d'+k.replace(/-/g,"")+'"><div class="dayhead"><span class="d">'+esc(fmtDay(k))+'</span>'+
     (rel?'<span class="rel">'+rel+'</span>':'')+ev.map(e=>'<span class="event">'+esc(e.title)+'</span>').join("")+
-    (w&&w.woke?'<span class="rel mono">woke '+esc(w.woke)+(w.slept?' · bed '+esc(w.slept):'')+'</span>':'')+'</div>'+
+    (w&&w.woke?'<span class="rel mono">woke '+esc(t12(w.woke))+(w.slept?' · bed '+esc(t12(w.slept)):'')+'</span>':'')+'</div>'+
     (ts.length?'<div class="card"><div class="list">'+ts.map(t=>taskRow(t)).join("")+'</div></div>':'')+'</div>';
 }
 function renderAgenda(){
