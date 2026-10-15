@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Pointbreak setup</title>
+<style>
+:root{--bg:#FAF6F0;--ink:#2C1A38;--muted:#6F6479;--gold:#9C7A2C;--card:#fff;--line:#E5DCD0;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#18101F;--ink:#F2EADF;--muted:#A898B3;--gold:#D9B65E;--card:#22172C;--line:#3A2C47;color-scheme:dark}}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 -apple-system,system-ui,sans-serif}
+main{max-width:620px;margin:0 auto;padding:calc(env(safe-area-inset-top,0px) + 20px) 16px 48px;display:grid;gap:18px}
+h1{font:600 2rem Georgia,serif;margin:0}
+h2{font:600 1.3rem Georgia,serif;margin:0 0 6px}
+section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+ol{margin:0;padding-left:20px;display:grid;gap:8px}
+code{background:color-mix(in srgb,var(--gold) 18%,transparent);padding:1px 5px;border-radius:5px;font-size:.9em;overflow-wrap:anywhere}
+a{color:var(--gold)}
+.note{color:var(--muted);font-size:.9rem}
+</style>
+</head>
+<body>
+<main>
+<h1>Pointbreak on your iPhone</h1>
+
+<section>
+<h2>1 · Install the app</h2>
+<ol>
+<li>Open this link in <b>Safari</b>: <a href="./">shreyansh024.github.io/pointbreak</a></li>
+<li>Tap <b>Share</b> (the square with an arrow) → <b>Add to Home Screen</b> → <b>Add</b>.</li>
+<li>Open Pointbreak from the new icon. The gold and silver rates at the top work straight away.</li>
+<li>To load your planner, paste your <b>connection link</b> once. To get it, open the <b>Pointbreak</b> Google Sheet in the Google Sheets app, go to the <b>Settings</b> tab and copy cell <b>B3</b>.</li>
+</ol>
+</section>
+
+<section>
+<h2>2 · One-tap "I'm awake"</h2>
+<ol>
+<li>Open <b>Shortcuts</b> → <b>+</b> → <b>Add Action</b> → <b>Get Contents of URL</b>.</li>
+<li>URL: your connection link with <code>&amp;action=wake</code> added on the end.</li>
+<li>Add the action <b>Show Result</b>. Name the shortcut <b>I'm awake</b>.</li>
+<li>Pick how to trigger it:
+  <ul>
+  <li>a <b>Shortcuts widget</b> on your home screen,</li>
+  <li><b>Settings → Accessibility → Touch → Back Tap → Double Tap</b> (two taps on the back of the phone),</li>
+  <li>"Hey Siri, I'm awake",</li>
+  <li>or <b>Automation → Alarm → Is Stopped</b>, which logs it automatically when you stop your alarm.</li>
+  </ul></li>
+<li>Make a second shortcut with <code>&amp;action=sleep</code> for <b>Going to bed</b>.</li>
+</ol>
+</section>
+
+<section>
+<h2>3 · Reminders that ring when the app is closed</h2>
+<ol>
+<li><b>Settings → Calendar → Accounts → Add Account → Other → Add Subscribed Calendar</b>.</li>
+<li>Server: your connection link with <code>&amp;action=ics</code> added on the end → <b>Next</b> → <b>Save</b>.</li>
+<li>Open that account and switch <b>Remove Alerts</b> off.</li>
+</ol>
+<p class="note">Each task alerts 10 minutes before its time. Tasks without a time alert at 9:00, and daily routines alert at their set time.</p>
+</section>
+</main>
+</body>
+</html>
