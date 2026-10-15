@@ -55,6 +55,8 @@ button{cursor:pointer}
 .rate .val.up{color:var(--up)} .rate .val.down{color:var(--down)}
 .rate .val .arr{font-size:.75rem;margin-left:3px}
 .rate .hi{font-family:var(--f-mono);font-size:.7rem;opacity:.7;white-space:nowrap}
+.rate .kind{font-weight:600}
+.rate .kind.live{color:var(--up)} .rate .kind.closing{color:var(--gold-bar,#D9B65E)}
 .mkt{text-align:right}
 .mkt .state{font-family:var(--f-mono);font-size:.8rem;font-weight:500;white-space:nowrap}
 .mkt .state.open{color:var(--up)} .mkt .state.closed{color:var(--down)}
@@ -145,8 +147,8 @@ p.help{display:block}
 <body>
 <div class="rates" aria-label="Live bullion rates from SLN Bullion">
   <div class="in">
-    <div class="rate"><div class="lbl">India Gold</div><div class="val" id="r-gold">—</div><div class="hi"><span id="r-gold-hi">H —</span> · 10g</div></div>
-    <div class="rate"><div class="lbl">Silver Chn T+1</div><div class="val" id="r-silver">—</div><div class="hi"><span id="r-silver-hi">H —</span> · kg</div></div>
+    <div class="rate"><div class="lbl">India Gold <span class="kind" id="r-gold-kind"></span></div><div class="val" id="r-gold">—</div><div class="hi"><span id="r-gold-hi">H —</span> · 10g</div></div>
+    <div class="rate"><div class="lbl">Silver T+1 <span class="kind" id="r-silver-kind"></span></div><div class="val" id="r-silver">—</div><div class="hi"><span id="r-silver-hi">H —</span> · kg</div></div>
     <div class="mkt"><div class="lbl">Market</div><div class="state" id="r-mkt">—</div><div class="at" id="r-at"></div></div>
   </div>
 </div>
@@ -265,6 +267,8 @@ function showRate(id,row,spec){
   el.className="val"+(open&&trend!=="flat"?" "+trend:"");
   el.innerHTML="₹"+inr(v)+(open&&trend!=="flat"?'<span class="arr">'+(trend==="up"?"▲":"▼")+"</span>":"");
   hi.textContent=h>0?"H ₹"+inr(h):"H —";
+  const kind=$("r-"+id+"-kind");   // SLN's feed carries the live rate while MCX trades and the closing rate after
+  kind.className="kind "+(open?"live":"closing");kind.textContent=open?"· LIVE":"· CLOSING";
 }
 async function loadRates(){
   const open=marketOpen(new Date());
