@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Jost:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: one phone-width column under a sticky rate bar. Rates → wake card → today → 30-day strip → agenda → chats. Sanisha family palette. */
+/* Layout: phone-width column between a sticky rate bar and a bottom tab bar (Today · Calendar · Ideas · Playbook). Sanisha family palette. */
 :root{
   --bg:#FAF6F0; --surface:#FFFFFF; --sunk:#F2ECE3; --ink:#2C1A38; --muted:#6F6479; --line:#E5DCD0;
   --gold:#9C7A2C; --gold-soft:#F3E8CC; --bar:#2C1A38; --bar-fg:#FAF6F0;
@@ -34,29 +34,34 @@
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45;-webkit-tap-highlight-color:transparent}
 [hidden]{display:none!important}
-.wrap{max-width:640px;margin:0 auto;padding-inline:16px;padding-block:18px calc(64px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:28px}
-h1,h2{font-family:var(--f-display);font-weight:600;margin:0;text-wrap:balance}
+.wrap{max-width:680px;margin:0 auto;padding-inline:16px;padding-block:18px calc(96px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:26px}
+.view{display:flex;flex-direction:column;gap:26px}
+h1,h2,h3{font-family:var(--f-display);font-weight:600;margin:0;text-wrap:balance}
 h1{font-size:2rem;line-height:1}
 h2{font-size:1.45rem}
+h3{font-size:1.15rem}
+p{margin:0}
 .eyebrow{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:500}
 .mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
-button,input,select{font:inherit;color:inherit}
+.muted{color:var(--muted)}
+button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
 .status{font-size:.85rem;color:var(--muted);background:var(--sunk);border-radius:10px;padding:10px 12px}
+section{display:grid;gap:10px;min-width:0}
 
 /* rate bar */
 .rates{position:sticky;top:0;z-index:5;background:var(--bar);color:var(--bar-fg);padding:calc(env(safe-area-inset-top,0px) + 10px) 16px 10px}
-.rates .in{max-width:640px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:center}
+.rates .in{max-width:680px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:center}
 .rate{min-width:0}
 .rate .lbl,.mkt .lbl{font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;opacity:.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rate .val{font-family:var(--f-mono);font-size:1.12rem;font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap}
 .rate .val.up{color:var(--up)} .rate .val.down{color:var(--down)}
 .rate .val .arr{font-size:.75rem;margin-left:3px}
 .rate .hi{font-family:var(--f-mono);font-size:.7rem;opacity:.7;white-space:nowrap}
-.rate .kind{font-weight:600}
-.rate .kind.live{color:var(--up)} .rate .kind.closing{color:var(--gold-bar,#D9B65E)}
+.mkt .kind{font-family:var(--f-mono);font-size:.62rem;letter-spacing:.08em;font-weight:600;white-space:nowrap}
+.mkt .kind.live{color:var(--up)} .mkt .kind.closing{color:#D9B65E}
 .mkt{text-align:right}
 .mkt .state{font-family:var(--f-mono);font-size:.8rem;font-weight:500;white-space:nowrap}
 .mkt .state.open{color:var(--up)} .mkt .state.closed{color:var(--down)}
@@ -64,6 +69,13 @@ button{cursor:pointer}
 .mkt .at{font-family:var(--f-mono);font-size:.65rem;opacity:.6;margin-top:2px}
 @media (prefers-reduced-motion:no-preference){.mkt .open .pulse{animation:pulse 1.6s ease-in-out infinite}}
 @keyframes pulse{50%{opacity:.25}}
+
+/* bottom tabs */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px))}
+.tabs .in{max-width:680px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.tab{border:0;background:transparent;border-radius:12px;padding:8px 4px;display:grid;justify-items:center;gap:2px;font-size:.75rem;color:var(--muted)}
+.tab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.tab[aria-current="page"]{color:var(--ink);background:var(--sunk);font-weight:600}
 
 /* wake */
 .wake{background:var(--ink);color:var(--bg);border-radius:18px;padding:18px;display:grid;gap:14px}
@@ -81,12 +93,15 @@ button{cursor:pointer}
 .chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .dot{display:inline-block;width:8px;height:8px;border-radius:50%;flex:none;background:var(--c,var(--muted))}
 .b-san{--c:var(--san)} .b-jj{--c:var(--jj)} .b-pj{--c:var(--pj)} .b-me{--c:var(--me)}
+.pill{display:inline-block;font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--c,var(--line));color:var(--c,var(--muted));border-radius:999px;padding:1px 8px;white-space:nowrap}
 
 /* tasks */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:6px 14px}
 .list{display:flex;flex-direction:column}
 .task{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start;padding:10px 0;border-bottom:1px solid var(--line)}
 .task:last-child{border-bottom:0}
 .check{width:26px;height:26px;border-radius:8px;border:1.5px solid var(--c,var(--muted));background:transparent;display:grid;place-items:center;padding:0}
+.task.reel .check{border-radius:50%}
 .task.done .check{background:var(--c,var(--muted))}
 .task.done .check::after{content:"";width:10px;height:6px;border:2px solid var(--surface);border-top:0;border-right:0;transform:rotate(-45deg) translate(1px,-1px)}
 .task .t{min-width:0;overflow-wrap:anywhere}
@@ -97,31 +112,33 @@ button{cursor:pointer}
 .ic{border:0;background:transparent;color:var(--muted);border-radius:8px;min-width:34px;height:34px;font-size:.85rem;padding:0 6px}
 .ic:active{background:var(--sunk)}
 .ic.danger{color:var(--pj);font-weight:600}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:6px 14px}
 .empty{color:var(--muted);font-size:.9rem;padding:12px 0}
 
 /* forms */
 form.add{display:grid;gap:8px;grid-template-columns:1fr 1fr;background:var(--sunk);border-radius:14px;padding:12px}
 form.add .full{grid-column:1/-1}
-form input,form select{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px;min-width:0;width:100%;font-size:16px}
+form input,form select,form textarea{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px;min-width:0;width:100%;font-size:16px}
 form label.rep{display:flex;gap:8px;align-items:center;font-size:.88rem;color:var(--muted)}
 form label.rep input{width:auto}
-form button[type=submit]{border:0;background:var(--ink);color:var(--bg);border-radius:10px;padding:12px;font-weight:600}
+.btn{border:0;background:var(--ink);color:var(--bg);border-radius:10px;padding:10px 14px;font-weight:600}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
 
-/* 30-day strip */
-.strip{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
-.strip .wd{font-size:.68rem;text-align:center;color:var(--muted);letter-spacing:.06em}
-.cell{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:5px 2px 6px;display:flex;flex-direction:column;align-items:center;gap:4px;min-height:52px;font-family:var(--f-mono);font-size:.85rem;color:inherit}
+/* calendar */
+.calhead{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.calhead .nav{display:flex;gap:6px}
+.month{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.month .wd{font-size:.68rem;text-align:center;color:var(--muted);letter-spacing:.06em}
+.cell{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:5px 2px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;min-height:58px;font-family:var(--f-mono);font-size:.85rem;color:inherit;position:relative}
+.cell.out{opacity:.35}
+.cell.past{opacity:.6}
 .cell.today{border-color:var(--gold);background:var(--gold-soft)}
+.cell.sel{outline:2px solid var(--ink);outline-offset:-2px}
 .cell.ev{box-shadow:inset 0 -3px 0 var(--gold)}
-.cell.blank{visibility:hidden}
-.cell .dots{display:flex;gap:2px;flex-wrap:wrap;justify-content:center}
+.cell .dots{display:flex;gap:2px;flex-wrap:wrap;justify-content:center;max-width:100%}
 .cell .dot{width:6px;height:6px}
-.cell.alldone .dot{opacity:.35}
+.cell .reelmark{font-family:var(--f-body);font-size:.58rem;letter-spacing:.06em;color:var(--gold);font-weight:600}
 .legend{display:flex;gap:12px;flex-wrap:wrap;font-size:.8rem;color:var(--muted)}
 .legend span{display:inline-flex;gap:6px;align-items:center}
-
-/* agenda */
 .agenda{display:flex;flex-direction:column;gap:18px}
 .day{display:grid;gap:4px;scroll-margin-top:90px}
 .dayhead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
@@ -130,9 +147,39 @@ form button[type=submit]{border:0;background:var(--ink);color:var(--bg);border-r
 .event{font-size:.78rem;background:var(--gold-soft);color:var(--ink);border-radius:999px;padding:2px 10px}
 .toggle{border:1px dashed var(--line);background:transparent;border-radius:12px;padding:12px;color:var(--muted);width:100%}
 
+/* ideas */
+.ideas{display:grid;gap:12px}
+.idea{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;display:grid;gap:8px;min-width:0}
+.idea .head{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.idea .hook{font-family:var(--f-display);font-size:1.15rem;line-height:1.3;font-style:italic}
+.idea .meta{font-size:.8rem;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap}
+.idea details{font-size:.88rem}
+.idea summary{cursor:pointer;color:var(--muted)}
+.idea .shots{margin-top:6px;display:grid;gap:4px}
+.idea .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.idea .row input[type=date]{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px;font-size:16px;min-width:0}
+.idea.scheduled{border-color:var(--gold)}
+.idea.posted{opacity:.6}
+.pick{display:grid;gap:10px}
+
+/* playbook */
+.pb{display:grid;gap:22px}
+.pb section{gap:8px}
+.pb ol,.pb ul{margin:0;padding-left:20px;display:grid;gap:6px}
+.pb .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.pb .box{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:grid;gap:6px;min-width:0}
+.pb .box h3{font-size:1.05rem;display:flex;gap:8px;align-items:center}
+.tablewrap{overflow-x:auto}
+.pb table{border-collapse:collapse;width:100%;font-size:.88rem}
+.pb table.wide{min-width:460px}
+.pb th,.pb td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.pb th{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.pb .q{font-family:var(--f-display);font-style:italic;font-size:1.05rem}
+.pb .rule{background:var(--gold-soft);border-radius:12px;padding:10px 12px;font-size:.9rem}
+
 /* chats */
 .groups{display:grid;gap:12px}
-.group h3{margin:0;padding-top:8px;font-size:.95rem;display:flex;gap:8px;align-items:center}
+.group h3{font-size:.95rem;font-family:var(--f-body);padding-top:8px;display:flex;gap:8px;align-items:center}
 .chat{padding:8px 0;border-bottom:1px solid var(--line);font-size:.92rem}
 .chat:last-child{border-bottom:0}
 .chat a{color:var(--ink)}
@@ -147,9 +194,9 @@ p.help{display:block}
 <body>
 <div class="rates" aria-label="Live bullion rates from SLN Bullion">
   <div class="in">
-    <div class="rate"><div class="lbl">India Gold <span class="kind" id="r-gold-kind"></span></div><div class="val" id="r-gold">—</div><div class="hi"><span id="r-gold-hi">H —</span> · 10g</div></div>
-    <div class="rate"><div class="lbl">Silver T+1 <span class="kind" id="r-silver-kind"></span></div><div class="val" id="r-silver">—</div><div class="hi"><span id="r-silver-hi">H —</span> · kg</div></div>
-    <div class="mkt"><div class="lbl">Market</div><div class="state" id="r-mkt">—</div><div class="at" id="r-at"></div></div>
+    <div class="rate"><div class="lbl" id="r-gold-lbl">India Gold</div><div class="val" id="r-gold">—</div><div class="hi"><span id="r-gold-hi">H —</span> · 10g</div></div>
+    <div class="rate"><div class="lbl" id="r-silver-lbl">Silver Chennai T+1</div><div class="val" id="r-silver">—</div><div class="hi"><span id="r-silver-hi">H —</span> · kg</div></div>
+    <div class="mkt"><div class="lbl">Market</div><div class="state" id="r-mkt">—</div><div class="kind" id="r-kind"></div><div class="at" id="r-at"></div></div>
   </div>
 </div>
 
@@ -162,78 +209,267 @@ p.help{display:block}
     <div class="mono" id="today-label" style="color:var(--muted)"></div>
   </header>
 
-  <!-- first-run connection -->
-  <section id="setup" hidden style="display:grid;gap:10px">
+  <section id="setup" hidden>
     <h2>Connect your planner</h2>
-    <p class="help" style="margin:0">Open the <b>Pointbreak</b> Google Sheet, go to the <b>Settings</b> tab and copy the <b>Connection link</b> (cell B3). Paste it here once. This phone remembers it.</p>
+    <p class="help">Open the <b>Pointbreak</b> Google Sheet, go to the <b>Settings</b> tab and copy the <b>Connection link</b> (cell B3). Paste it here once. This phone remembers it.</p>
     <form class="add" id="setup-form">
       <input class="full" type="url" id="f-link" placeholder="https://script.google.com/macros/s/…/exec?key=…" required autocomplete="off">
-      <button class="full" type="submit">Connect</button>
+      <button class="btn full" type="submit">Connect</button>
     </form>
   </section>
 
   <div class="status" id="status" hidden></div>
 
-  <section class="wake" aria-label="Wake log">
-    <div class="row">
-      <button class="btn-wake" id="btn-wake" data-act="wake">I'm awake</button>
-      <button class="btn-bed" id="btn-bed" data-act="sleep">Going to bed</button>
-    </div>
-    <div class="stats">
-      <div class="stat"><b id="st-today">--:--</b><span>Woke today</span></div>
-      <div class="stat"><b id="st-avg">--:--</b><span>Avg wake · 14d</span></div>
-      <div class="stat"><b id="st-bed">--:--</b><span>Avg bed · 14d</span></div>
-    </div>
-    <svg id="spark" viewBox="0 0 300 56" preserveAspectRatio="none" aria-label="Wake times, last 14 days"></svg>
-  </section>
+  <!-- ================= TODAY ================= -->
+  <div class="view" id="v-today">
+    <section class="wake" aria-label="Wake log">
+      <div class="row">
+        <button class="btn-wake" id="btn-wake" data-act="wake">I'm awake</button>
+        <button class="btn-bed" id="btn-bed" data-act="sleep">Going to bed</button>
+      </div>
+      <div class="stats">
+        <div class="stat"><b id="st-today">--:--</b><span>Woke today</span></div>
+        <div class="stat"><b id="st-avg">--:--</b><span>Avg wake · 14d</span></div>
+        <div class="stat"><b id="st-bed">--:--</b><span>Avg bed · 14d</span></div>
+      </div>
+      <svg id="spark" viewBox="0 0 300 56" preserveAspectRatio="none" aria-label="Wake times, last 14 days"></svg>
+    </section>
 
-  <section aria-labelledby="h-today" style="display:grid;gap:10px">
-    <div class="top"><h2 id="h-today">Today</h2><span class="mono" id="today-count" style="color:var(--muted);font-size:.85rem"></span></div>
-    <div class="card"><div class="list" id="today-list"></div></div>
-    <form class="add" id="add">
-      <input class="full" type="text" id="f-title" placeholder="Add a task… e.g. Call Mohit about chain order" autocomplete="off" required>
-      <input type="date" id="f-date" aria-label="Date">
-      <input type="time" id="f-time" aria-label="Time (optional)">
-      <select id="f-biz" aria-label="Business">
-        <option value="me">Life</option><option value="pj">Pooja Jewellers</option>
-        <option value="san">Sanisha</option><option value="jj">Jainuine Jeweller</option>
-      </select>
-      <label class="rep"><input type="checkbox" id="f-daily"> Every day</label>
-      <button class="full" type="submit">Add task</button>
-    </form>
-  </section>
+    <section aria-labelledby="h-today">
+      <div class="top"><h2 id="h-today">Today</h2><span class="mono" id="today-count" style="color:var(--muted);font-size:.85rem"></span></div>
+      <div class="muted" id="today-rhythm" style="font-size:.88rem"></div>
+      <div class="card"><div class="list" id="today-list"></div></div>
+      <form class="add" id="add">
+        <input class="full" type="text" id="f-title" placeholder="Add a task… e.g. Call Mohit about chain order" autocomplete="off" required>
+        <input type="date" id="f-date" aria-label="Date">
+        <input type="time" id="f-time" aria-label="Time (optional)">
+        <select id="f-biz" aria-label="Business">
+          <option value="me">Life</option><option value="pj">Pooja Jewellers</option>
+          <option value="san">Sanisha</option><option value="jj">Jainuine Jeweller</option>
+        </select>
+        <label class="rep"><input type="checkbox" id="f-daily"> Every day</label>
+        <button class="btn full" type="submit">Add task</button>
+      </form>
+    </section>
 
-  <section aria-labelledby="h-30" style="display:grid;gap:12px">
-    <div class="top"><h2 id="h-30">Next 30 days</h2>
+    <section aria-labelledby="h-pick">
+      <div class="top"><h2 id="h-pick">Pick today's reel</h2><button class="link-btn" data-act="go" data-v="ideas">All ideas</button></div>
+      <p class="help" id="pick-why"></p>
+      <div class="pick" id="pick"></div>
+    </section>
+
+    <section aria-labelledby="h-week">
+      <h2 id="h-week">Next 7 days</h2>
+      <div class="agenda" id="week"></div>
+      <button class="toggle" data-act="go" data-v="calendar">Open the full calendar</button>
+    </section>
+
+    <section aria-labelledby="h-chats">
+      <h2 id="h-chats">Chats</h2>
+      <p class="help">Your Claude Code chats, grouped by business. These links open in the Claude desktop app on your PC.</p>
+      <div class="groups" id="chats"><div class="empty">Your chats will appear here once the planner connects.</div></div>
+    </section>
+  </div>
+
+  <!-- ================= CALENDAR ================= -->
+  <div class="view" id="v-calendar" hidden>
+    <section>
+      <div class="calhead">
+        <h2 id="cal-title">Calendar</h2>
+        <div class="nav">
+          <button class="btn ghost" data-act="cal" data-v="-1" aria-label="Previous month">‹</button>
+          <button class="btn ghost" data-act="cal" data-v="0">Today</button>
+          <button class="btn ghost" data-act="cal" data-v="1" aria-label="Next month">›</button>
+        </div>
+      </div>
       <div class="chips" id="filters" role="group" aria-label="Filter by business"></div>
-    </div>
-    <div class="strip" id="strip"></div>
-    <div class="legend">
-      <span><i class="dot b-san"></i>Sanisha</span><span><i class="dot b-jj"></i>Jainuine</span>
-      <span><i class="dot b-pj"></i>Pooja</span><span><i class="dot b-me"></i>Life</span>
-      <span><i style="width:14px;height:3px;background:var(--gold);display:inline-block"></i>Festival</span>
-    </div>
-    <div class="agenda" id="agenda"></div>
-    <button class="toggle" id="btn-past" data-act="past">Show past days</button>
-    <div class="agenda" id="past" hidden></div>
-  </section>
+      <div class="month" id="month"></div>
+      <div class="legend">
+        <span><i class="dot b-san"></i>Sanisha</span><span><i class="dot b-jj"></i>Jainuine</span>
+        <span><i class="dot b-pj"></i>Pooja</span><span><i class="dot b-me"></i>Life</span>
+        <span><b class="mono" style="color:var(--gold);font-size:.7rem">REEL</b> reel planned</span>
+        <span><i style="width:14px;height:3px;background:var(--gold);display:inline-block"></i>Festival</span>
+      </div>
+    </section>
+    <section aria-label="Selected day">
+      <div id="selday"></div>
+    </section>
+    <section aria-labelledby="h-up">
+      <h2 id="h-up">Coming up · 30 days</h2>
+      <div class="agenda" id="agenda"></div>
+      <button class="toggle" id="btn-past" data-act="past">Show past days</button>
+      <div class="agenda" id="past" hidden></div>
+    </section>
+  </div>
 
-  <section aria-labelledby="h-chats" style="display:grid;gap:10px">
-    <h2 id="h-chats">Chats</h2>
-    <p class="help" style="margin:0">Your Claude Code chats, grouped by business. These links open in the Claude desktop app on your PC.</p>
-    <div class="groups" id="chats"><div class="empty">Your chats will appear here once the planner connects.</div></div>
-  </section>
+  <!-- ================= IDEAS ================= -->
+  <div class="view" id="v-ideas" hidden>
+    <section>
+      <div class="top"><h2>Reel ideas</h2><span class="mono muted" id="idea-count" style="font-size:.85rem"></span></div>
+      <p class="help">Every reel is posted from @thejainuinejeweller as a Collab with the account it's about. Pick a date to put an idea on the calendar. Tick it off there once it's posted.</p>
+      <div class="chips" id="idea-filters"></div>
+      <div class="chips" id="idea-status"></div>
+      <div class="ideas" id="ideas"></div>
+    </section>
+    <section aria-labelledby="h-newidea">
+      <h3 id="h-newidea">Add your own idea</h3>
+      <form class="add" id="add-idea">
+        <input class="full" type="text" id="i-title" placeholder="Idea, e.g. Mangalsutra styles: old vs new" required autocomplete="off">
+        <input class="full" type="text" id="i-hook" placeholder="Hook line (first 2 seconds)" autocomplete="off">
+        <select id="i-biz" aria-label="Account">
+          <option value="jj">Jainuine Jeweller</option><option value="pj">Pooja Jewellers</option><option value="san">Sanisha</option>
+        </select>
+        <select id="i-format" aria-label="Format">
+          <option>Reel</option><option>Carousel</option><option>Story</option>
+        </select>
+        <button class="btn full" type="submit">Save idea</button>
+      </form>
+    </section>
+  </div>
 
-  <section class="help" aria-label="About">
-    <div>Rates: SLN Bullion live feed. India Gold = ask (sell) per 10 g; Silver = Chennai T+1 per kg; H = today's high. Refreshed every 30 seconds while the app is open. Green ▲ / red ▼ = moved up / down since the last change. Market = MCX hours, Mon–Fri 09:00–23:30 IST.</div>
-    <div><button class="link-btn" data-act="reconnect">Change connection link</button></div>
-  </section>
+  <!-- ================= PLAYBOOK ================= -->
+  <div class="view" id="v-playbook" hidden>
+    <div class="pb">
+      <section>
+        <div class="eyebrow">Master playbook</div>
+        <h2>Three accounts, one pipeline</h2>
+        <p>You make each reel once. It's posted from <b>@thejainuinejeweller</b> as an Instagram <b>Collab</b> with the account it's about, so it shows on both grids.</p>
+        <div class="grid2">
+          <div class="box b-jj"><h3><i class="dot"></i>@thejainuinejeweller</h3><p class="muted">The engine. Education, Weigh-ins, Jainuine or Not, founder story, funny reels. Every reel goes out from here.</p></div>
+          <div class="box b-pj"><h3><i class="dot"></i>@poojajewellers.nangloi</h3><p class="muted">The shop since 1993. Gold, diamonds, weddings, festival footfall. Gets the gold and wedding Collabs plus the daily rate Story.</p></div>
+          <div class="box b-san"><h3><i class="dot"></i>@sanishajewels</h3><p class="muted">925 silver across India, in one-of-one drops. Gets the silver, drop and gifting Collabs.</p></div>
+        </div>
+        <div class="rule"><b>Always:</b> Hinglish in every line, hook in the first 2 seconds, under 40 seconds, captions burned in. <b>Never:</b> prices, making charges or margins; never call Sanisha silver "hallmarked" (it carries a 925 stamp); day-to-day decisions on camera, family matters off.</div>
+      </section>
+
+      <section>
+        <h2>Your week</h2>
+        <p class="muted">Five reels a week, Stories every day, one rest-and-batch day. Today's row is what "Pick today's reel" suggests from.</p>
+        <div class="tablewrap"><table class="wide">
+          <thead><tr><th>Day</th><th>Reel</th><th>Collab with</th><th>Stories</th></tr></thead>
+          <tbody id="pb-week"></tbody>
+        </table></div>
+      </section>
+
+      <section>
+        <h2>A content day, built on your wake time</h2>
+        <p class="muted" id="pb-wake-note"></p>
+        <div class="tablewrap"><table>
+          <thead><tr><th>When</th><th>What</th></tr></thead>
+          <tbody id="pb-day"></tbody>
+        </table></div>
+      </section>
+
+      <section>
+        <h2>Sunday batch shoot · 2 hours</h2>
+        <ol>
+          <li><b>Pick 5 ideas</b> from the Ideas tab and schedule them Mon–Sat. Mix: 2 education, 1 Weigh-in, 1 shop or Sanisha, 1 funny.</li>
+          <li><b>Write the hook and 3 beats</b> for each on paper. Say the hook out loud; if it doesn't sound like you at the counter, change it.</li>
+          <li><b>Set up once:</b> plum velvet for silver, ivory cloth for gold, the 0.01 g scale, loupe, phone on tripod near the window.</li>
+          <li><b>Shoot all the close-ups first</b> (pieces, stamps, scale), then all the face-to-camera parts in one outfit.</li>
+          <li><b>Rough-cut in CapCut</b> the same evening. Save each as a draft named with its post date.</li>
+          <li><b>Shoot 3 spare B-roll clips</b> (shop, hands, scale) for days when nothing gets filmed.</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>Shoot better reels</h2>
+        <div class="grid2">
+          <div class="box"><h3>Light</h3><ul>
+            <li>Window light from the side, at 45°. Never under the shop's overhead tube lights.</li>
+            <li>For sparkle, move a small LED or the phone torch slowly across the piece while you film.</li>
+            <li>White card on the shadow side to lift it; black card to kill reflections on polished gold.</li></ul></div>
+          <div class="box"><h3>Phone settings</h3><ul>
+            <li>4K at 30 fps; 60 fps for slow-motion sparkle.</li>
+            <li>Tap and hold to lock focus and exposure before you start.</li>
+            <li>Use 2× for close-ups, not 0.5× (wide lenses distort jewellery). Wipe the lens every time.</li></ul></div>
+          <div class="box"><h3>Framing</h3><ul>
+            <li>Vertical 9:16. Keep faces and text in the middle 60% so captions and buttons don't cover them.</li>
+            <li>Tripod or an overhead rig for flat-lays; handheld only for walk-throughs.</li>
+            <li>Clean hands and nails in every close-up; the piece is the hero.</li></ul></div>
+          <div class="box"><h3>Sound</h3><ul>
+            <li>Clip-on mic for talking parts, or shoot before the shop opens.</li>
+            <li>Trending audio only for funny reels; education reels use your voice.</li>
+            <li>Burn in captions: most people watch muted.</li></ul></div>
+          <div class="box"><h3>Your signature</h3><ul>
+            <li>The 0.01 g scale in every Weigh-in and explainer.</li>
+            <li>Spec card on screen for weight, length and purity, in a mono font.</li>
+            <li>End card for one second: the wordmark and "Stay jainuine."</li></ul></div>
+          <div class="box"><h3>Edit</h3><ul>
+            <li>Cut every pause. A new shot every 2–3 seconds.</li>
+            <li>No more than 6 words per caption line, 2 lines at a time.</li>
+            <li>One cover style per series so the grid reads like a shelf.</li></ul></div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Hooks that work</h2>
+        <div class="tablewrap"><table>
+          <thead><tr><th>Pattern</th><th>Example</th></tr></thead>
+          <tbody>
+            <tr><td>Secret</td><td class="q">"Jewellers ek cheez kabhi nahi batate. Today, I will."</td></tr>
+            <tr><td>Challenge</td><td class="q">"Iss chain ka weight guess karo."</td></tr>
+            <tr><td>Myth-buster</td><td class="q">"925 likha hai matlab pure silver? Not really."</td></tr>
+            <tr><td>Warning</td><td class="q">"Gold lene se pehle, ye 6 characters check karna mat bhoolna."</td></tr>
+            <tr><td>Quick test</td><td class="q">"Asli silver hai ya nakli? 30 second mein pata karo."</td></tr>
+            <tr><td>Story</td><td class="q">"3rd generation jeweller hoon. Aur ab main kuch naya bana raha hoon."</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <section>
+        <h2>Before you hit post</h2>
+        <ul>
+          <li>Hook said in the first 2 seconds, with text on screen.</li>
+          <li>Under 40 seconds. Captions burned in. No price, making charge or margin anywhere, including the caption.</li>
+          <li>Collab invite sent to the right account (gold and weddings → Pooja, silver and drops → Sanisha).</li>
+          <li>Caption: hook again, one useful line, one question for the comments, 3–5 hashtags.</li>
+          <li>Post at your slot (about 1 PM or 7–9 PM). Reply to every comment in the first hour.</li>
+          <li>Next morning, note the <b>saves</b>. After two weeks, do more of whichever series gets the most.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Season ahead</h2>
+        <div class="tablewrap"><table class="wide">
+          <thead><tr><th>When</th><th>Moment</th><th>Content</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">20 Oct</td><td>Dussehra</td><td>Sanisha Coming Soon reel; greeting post for Pooja</td></tr>
+            <tr><td class="mono">29 Oct</td><td>Karwa Chauth</td><td>Gifting picks 3–5 days before; last-day Story</td></tr>
+            <tr><td class="mono">30 Oct</td><td>Sanisha Drop 01 "Sa"</td><td>Sneak peeks D−5 to D−1, live reel at 8 PM</td></tr>
+            <tr><td class="mono">6 Nov</td><td>Dhanteras</td><td>HUID / what-to-check reel by 3 Nov; Stories all day; rush reel the day after</td></tr>
+            <tr><td class="mono">8 Nov</td><td>Diwali</td><td>Light day: one greeting, family time</td></tr>
+            <tr><td class="mono">11 Nov</td><td>Bhai Dooj</td><td>Silver gifts for siblings (Sanisha)</td></tr>
+            <tr><td class="mono">13 Nov</td><td>Sanisha Drop 02 "Ni"</td><td>Same drop cycle as Drop 01</td></tr>
+            <tr><td class="mono">Late Nov</td><td>Wedding season</td><td>Bridal Weigh-ins, 4Cs, 22K vs 18K, "wedding phone" funny reel</td></tr>
+          </tbody>
+        </table></div>
+        <p class="help">Festival dates are from memory; check them against a panchang.</p>
+      </section>
+
+      <section class="help">
+        <div>Rates: SLN Bullion live feed. India Gold = ask (sell) per 10 g; Silver = Chennai T+1 per kg; H = today's high. Refreshed every 30 seconds while the app is open. Green ▲ / red ▼ = moved up / down since the last change. Market = MCX hours, Mon–Fri 9:00 AM–11:30 PM IST.</div>
+        <div><button class="link-btn" data-act="reconnect">Change connection link</button> · <a class="link-btn" href="setup.html">iPhone setup</a></div>
+      </section>
+    </div>
+  </div>
 </div>
+
+<nav class="tabs" aria-label="Sections">
+  <div class="in">
+    <button class="tab" data-act="go" data-v="today"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>Today</button>
+    <button class="tab" data-act="go" data-v="calendar"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Calendar</button>
+    <button class="tab" data-act="go" data-v="ideas"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M3 10h18M7 6l2 4M12 6l2 4M17 6l2 4"/></svg>Ideas</button>
+    <button class="tab" data-act="go" data-v="playbook"><svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-2z"/><path d="M8 7h6M8 11h6"/></svg>Playbook</button>
+  </div>
+</nav>
 
 <script>
 (function(){
 const BIZ={san:"Sanisha",jj:"Jainuine",pj:"Pooja",me:"Life"};
-const S={tasks:{},routines:{},checks:{},wake:{},chats:{},filter:"all",showPast:false,pendingDel:null};
+const HANDLE={san:"@sanishajewels",jj:"@thejainuinejeweller",pj:"@poojajewellers.nangloi"};
+const COLL=["tasks","routines","checks","wake","chats","ideas"];
+const S={tasks:{},routines:{},checks:{},wake:{},chats:{},ideas:{},filter:"all",ifilter:"all",istatus:"bank",showPast:false,pendingDel:null,view:"today",cal:null,sel:null};
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const pad=n=>String(n).padStart(2,"0");
@@ -244,22 +480,41 @@ const todayKey=()=>key(new Date());
 const fmtDay=k=>parse(k).toLocaleDateString("en-IN",{weekday:"short",day:"numeric",month:"short"});
 const toMin=hm=>{if(!hm)return null;const[h,m]=hm.split(":").map(Number);return h*60+m};
 const t12=v=>{if(!v)return "";const[h,m]=v.split(":").map(Number);return ((h%12)||12)+":"+pad(m)+" "+(h<12?"AM":"PM")};   // stored 24h, shown 12h
-const fromMin=m=>{if(m==null)return "--:--";m=Math.round(m)%1440;return t12(pad(Math.floor(m/60))+":"+pad(m%60))};
+const fromMin=m=>{if(m==null)return "--:--";m=Math.round(m)%1440;if(m<0)m+=1440;return t12(pad(Math.floor(m/60))+":"+pad(m%60))};
 const hm=d=>pad(d.getHours())+":"+pad(d.getMinutes());
-const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 const list=c=>Object.entries(S[c]).map(([id,v])=>Object.assign({id},v));
 function setStatus(t){const el=$("status");el.textContent=t||"";el.hidden=!t}
 
+/* weekly rhythm (0 = Sunday) — drives "Pick today's reel" and the playbook table */
+const WEEK=[
+  {d:"Sun",reel:"No reel: batch-shoot the week, plan in Ideas",series:[],collab:"—",story:"Weigh-in reveal, polls, Q&A"},
+  {d:"Mon",reel:"Explainer (925, karats, tola, care)",series:["Explainer"],collab:"Sanisha or Pooja",story:"Gold & silver rate"},
+  {d:"Tue",reel:"Jainuine or Not / buyer protection",series:["Jainuine or Not","Gold & diamonds"],collab:"Pooja",story:"Gold & silver rate"},
+  {d:"Wed",reel:"Jainuine Weigh-in",series:["Weigh-in"],collab:"Pooja (gold) / Sanisha (silver)",story:"Rate · answer tomorrow"},
+  {d:"Thu",reel:"Behind the counter / founder",series:["Behind the counter","Founder"],collab:"Pooja",story:"Weigh-in reveal · rate"},
+  {d:"Fri",reel:"Sanisha: drops, styles, gifting",series:["Sanisha","Festival"],collab:"Sanisha",story:"Drop countdown · rate"},
+  {d:"Sat",reel:"Funny, trend or AI",series:["Funny","AI"],collab:"Pooja or Sanisha",story:"Rate · behind the scenes"}];
+
 /* ================= live rates (SLN Bullion) ================= */
 const FEED="https://bcast.slnbullion.com/VOTSBroadcastStreaming/Services/xml/GetLiveRateByTemplateID/sln";
-const ROWS={gold:{name:"India Gold",col:3},silver:{name:"SILVER CHENNAI (T+1)",col:3}};   // cols: 2 buy, 3 sell (ask), 4 high, 5 low
+const ROWS={gold:{name:"India Gold",label:"India Gold",col:3},silver:{name:"SILVER CHENNAI (T+1)",label:"Silver Chennai T+1",col:3,alt:{name:"India Silver",label:"India Silver"}}};   // T+1 rows go blank on weekends   // cols: 2 buy, 3 sell (ask), 4 high, 5 low
 const inr=n=>Number(n).toLocaleString("en-IN",{maximumFractionDigits:0});
 function istParts(d){const p={};new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Kolkata",weekday:"short",hour:"2-digit",minute:"2-digit",hour12:false}).formatToParts(d).forEach(x=>p[x.type]=x.value);return p}
 function marketOpen(d){const p=istParts(d);const t=p.hour+":"+p.minute;return !["Sat","Sun"].includes(p.weekday)&&t>="09:00"&&t<"23:30"}
-function showRate(id,row,spec){
-  const el=$("r-"+id),hi=$("r-"+id+"-hi");
-  const v=parseFloat(row&&row[spec.col]),h=parseFloat(row&&row[4]);
-  if(!(v>0)){return}
+function showRate(id,rows,spec){
+  const el=$("r-"+id),hi=$("r-"+id+"-hi"),lbl=$("r-"+id+"-lbl");
+  const read=(name,col)=>{const r=rows.find(x=>x[1]===name);return{v:parseFloat(r&&r[col]),h:parseFloat(r&&r[4])}};
+  let {v,h}=read(spec.name,spec.col),label=spec.label;
+  const goodK="pb-good-"+id;
+  if(v>0)ls.set(goodK,JSON.stringify({v,h}));
+  else{   // feed row blank: show the last good value we saw, else the fallback row
+    let g=null;try{g=JSON.parse(ls.get(goodK)||"null")}catch(e){}
+    if(g&&g.v>0){v=g.v;h=g.h}
+    else if(spec.alt){({v,h}=read(spec.alt.name,spec.col));label=spec.alt.label}
+  }
+  lbl.textContent=label;
+  if(!(v>0))return;
   const lastK="pb-last-"+id,trendK="pb-trend-"+id;
   const last=parseFloat(ls.get(lastK)||"0");let trend=ls.get(trendK)||"flat";
   if(last>0&&v!==last)trend=v>last?"up":"down";
@@ -268,30 +523,27 @@ function showRate(id,row,spec){
   el.className="val"+(open&&trend!=="flat"?" "+trend:"");
   el.innerHTML="₹"+inr(v)+(open&&trend!=="flat"?'<span class="arr">'+(trend==="up"?"▲":"▼")+"</span>":"");
   hi.textContent=h>0?"H ₹"+inr(h):"H —";
-  const kind=$("r-"+id+"-kind");   // SLN's feed carries the live rate while MCX trades and the closing rate after
-  kind.className="kind "+(open?"live":"closing");kind.textContent=open?"· LIVE":"· CLOSING";
 }
 async function loadRates(){
   const open=marketOpen(new Date());
   $("r-mkt").className="state "+(open?"open":"closed");
   $("r-mkt").innerHTML='<span class="pulse"></span>'+(open?"OPEN":"CLOSED");
+  $("r-kind").className="kind "+(open?"live":"closing");$("r-kind").textContent=open?"LIVE RATE":"CLOSING RATE";
   try{
-    const res=await fetch(FEED+"?_="+Date.now(),{cache:"no-store"});
-    const txt=await res.text();
+    const txt=await (await fetch(FEED+"?_="+Date.now(),{cache:"no-store"})).text();
     const rows=txt.split(/\r?\n/).map(l=>l.replace(/^\t/,"").split("\t").map(c=>c.trim()));
-    for(const [id,spec] of Object.entries(ROWS))showRate(id,rows.find(r=>r[1]===spec.name),spec);
+    for(const [id,spec] of Object.entries(ROWS))showRate(id,rows,spec);
     $("r-at").textContent=t12(hm(new Date()));
   }catch(e){$("r-at").textContent="offline"}
 }
 
 /* ================= backend (Google Apps Script) ================= */
 let API=ls.get("pb-link")||"";
-function apiUrl(params){const u=new URL(API);Object.entries(params||{}).forEach(([k,v])=>u.searchParams.set(k,v));return u.toString()}
+function apiUrl(){return API}
 function applyData(d){COLL.forEach(c=>S[c]=d[c]||{});ls.set("pb-cache",JSON.stringify(d));render()}
-const COLL=["tasks","routines","checks","wake","chats"];
 async function pull(){
   if(!API)return;
-  try{const r=await fetch(apiUrl(),{cache:"no-store"});const j=await r.json();
+  try{const j=await (await fetch(apiUrl(),{cache:"no-store"})).json();
     if(!j.ok){setStatus(j.error==="bad_key"?"The connection link's key is wrong. Copy it again from the Settings tab.":"The planner answered with an error. Try again shortly.");return}
     applyData(j.data);setStatus("")}
   catch(e){setStatus("Offline. Showing your last saved planner.")}
@@ -303,22 +555,77 @@ function write(ops){ // optimistic: apply locally, then send
   if(!API){setStatus("Connect your planner first (top of the page).");return}
   const k=new URL(API).searchParams.get("key");
   queue=queue.then(async()=>{
-    try{const r=await fetch(API.split("?")[0],{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({key:k,ops})});
-      const j=await r.json();if(j.ok)applyData(j.data);else setStatus("That change didn't save ("+j.error+"). Try again.")}
+    try{const j=await (await fetch(API.split("?")[0],{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({key:k,ops})})).json();
+      if(j.ok)applyData(j.data);else setStatus("That change didn't save ("+j.error+"). Try again.")}
     catch(e){setStatus("That change didn't save. Check your connection and try again.")}
   });
 }
 const newId=p=>p+"-"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 
-/* ================= render ================= */
+/* ================= helpers ================= */
+const byTime=(a,b)=>(a.time||"99")<(b.time||"99")?-1:(a.time||"99")>(b.time||"99")?1:0;
+const passes=t=>S.filter==="all"||t.biz===S.filter;
+const tasksOn=k=>list("tasks").filter(t=>t.date===k&&t.kind!=="event").sort(byTime);
+const eventsOn=k=>list("tasks").filter(t=>t.date===k&&t.kind==="event");
 function wakeStats(){
   const t=parse(todayKey()),w=[],b=[];
   for(let i=0;i<14;i++){const r=S.wake[key(addDays(t,-i))];if(!r)continue;
     if(r.woke)w.push(toMin(r.woke));
     if(r.slept){let m=toMin(r.slept);if(m<12*60)m+=1440;b.push(m)}}
   const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;
-  return{avgWake:avg(w),avgBed:avg(b)};
+  return{avgWake:avg(w),avgBed:avg(b),n:w.length};
 }
+function scheduleIdea(id,date){
+  const i=S.ideas[id];if(!i||!date)return;
+  const tid="reel-"+id;
+  write([{op:"set",c:"tasks",id:tid,data:{title:"Reel: "+i.title,biz:i.biz,date,time:"19:00",kind:"reel",ideaId:id,done:false}},
+         {op:"set",c:"ideas",id,data:Object.assign({},i,{status:"scheduled",date})}]);
+}
+function unscheduleIdea(id){
+  const i=S.ideas[id];if(!i)return;
+  write([{op:"delete",c:"tasks",id:"reel-"+id},{op:"set",c:"ideas",id,data:Object.assign({},i,{status:"bank",date:""})}]);
+}
+
+/* ================= render: shared ================= */
+function taskRow(t,o={}){
+  const done=o.routine?!!(S.checks[o.day]||{})[t.id]:!!t.done;
+  const reel=t.kind==="reel";
+  return '<div class="task b-'+esc(t.biz)+(done?" done":"")+(reel?" reel":"")+'">'+
+    '<button class="check" aria-label="'+(done?"Mark not done":"Mark done")+'" data-act="'+(o.routine?"rtoggle":"toggle")+'" data-id="'+esc(t.id)+'" data-day="'+esc(o.day||"")+'"></button>'+
+    '<div class="t"><div class="title">'+esc(t.title)+'</div><div class="meta"><span class="biz">'+(BIZ[t.biz]||"Life")+'</span>'+
+    (reel?'<span class="pill" style="--c:var(--gold)">Reel</span>':'')+
+    (t.time?'<span class="mono">'+esc(t12(t.time))+'</span>':'')+(o.routine?'<span>Every day</span>':'')+'</div></div>'+
+    '<div class="acts">'+
+    (!o.routine&&!done?'<button class="ic" data-act="tomorrow" data-id="'+esc(t.id)+'" aria-label="Move to next day">→</button>':'')+
+    (S.pendingDel===t.id?'<button class="ic danger" data-act="del" data-id="'+esc(t.id)+'" data-kind="'+(o.routine?"routines":"tasks")+'">'+(reel?"Unplan?":"Delete?")+'</button>'
+      :'<button class="ic" data-act="askdel" data-id="'+esc(t.id)+'" aria-label="Delete">✕</button>')+'</div></div>';
+}
+function dayBlock(k,rel){
+  const ts=tasksOn(k).filter(passes),ev=eventsOn(k),w=S.wake[k];
+  if(!ts.length&&!ev.length&&!w)return "";
+  return '<div class="day" id="d'+k.replace(/-/g,"")+'"><div class="dayhead"><span class="d">'+esc(fmtDay(k))+'</span>'+
+    (rel?'<span class="rel">'+rel+'</span>':'')+ev.map(e=>'<span class="event">'+esc(e.title)+'</span>').join("")+
+    (w&&w.woke?'<span class="rel mono">woke '+esc(t12(w.woke))+(w.slept?' · bed '+esc(t12(w.slept)):'')+'</span>':'')+'</div>'+
+    (ts.length?'<div class="card"><div class="list">'+ts.map(t=>taskRow(t)).join("")+'</div></div>':'')+'</div>';
+}
+function ideaCard(i,compact){
+  const st=i.status||"bank";
+  return '<article class="idea b-'+esc(i.biz)+' '+st+'">'+
+    '<div class="head"><span class="pill">'+esc(BIZ[i.biz])+'</span>'+(i.collab?'<span class="muted" style="font-size:.78rem">Collab: '+esc(BIZ[i.collab]||i.collab)+'</span>':'')+
+    '<span class="pill" style="--c:var(--muted)">'+esc(i.series||i.format)+'</span>'+
+    (st==="scheduled"?'<span class="pill" style="--c:var(--gold)">'+esc(fmtDay(i.date))+'</span>':'')+(st==="posted"?'<span class="pill" style="--c:var(--me)">Posted</span>':'')+'</div>'+
+    '<h3>'+esc(i.title)+'</h3>'+(i.hook?'<p class="hook">“'+esc(i.hook)+'”</p>':'')+
+    '<div class="meta"><span>'+esc(i.format||"Reel")+(i.length?' · '+esc(i.length):'')+'</span>'+(i.effort?'<span>'+esc(i.effort)+'</span>':'')+'</div>'+
+    (!compact&&(i.shots||i.why)?'<details><summary>Shots &amp; why it works</summary><div class="shots">'+(i.shots?'<div>'+esc(i.shots)+'</div>':'')+(i.why?'<div class="muted">'+esc(i.why)+'</div>':'')+'</div></details>':'')+
+    '<div class="row">'+
+    (st==="bank"?(compact?'<button class="btn" data-act="sched-today" data-id="'+esc(i.id)+'">Shoot &amp; post today</button>'
+        :'<input type="date" id="dt-'+esc(i.id)+'" value="'+todayKey()+'" aria-label="Post date"><button class="btn" data-act="sched" data-id="'+esc(i.id)+'">Add to calendar</button>')
+      :st==="scheduled"?'<button class="btn ghost" data-act="unsched" data-id="'+esc(i.id)+'">Take off calendar</button><button class="btn ghost" data-act="posted" data-id="'+esc(i.id)+'">Mark posted</button>'
+      :'<button class="btn ghost" data-act="rebank" data-id="'+esc(i.id)+'">Back to ideas</button>')+
+    '</div></article>';
+}
+
+/* ================= render: views ================= */
 function renderWake(){
   const r=S.wake[todayKey()];
   $("st-today").textContent=r&&r.woke?t12(r.woke):"--:--";
@@ -333,60 +640,84 @@ function renderWake(){
   if(!pts.length)svg+='<text x="150" y="32" text-anchor="middle" fill="currentColor" fill-opacity=".6" font-size="11" font-family="Jost,sans-serif">Tap "I\'m awake" each morning to build your average</text>';
   $("spark").innerHTML=svg;
 }
-function taskRow(t,o={}){
-  const done=o.routine?!!(S.checks[o.day]||{})[t.id]:!!t.done;
-  return '<div class="task b-'+esc(t.biz)+(done?" done":"")+'">'+
-    '<button class="check" aria-label="'+(done?"Mark not done":"Mark done")+'" data-act="'+(o.routine?"rtoggle":"toggle")+'" data-id="'+esc(t.id)+'" data-day="'+esc(o.day||"")+'"></button>'+
-    '<div class="t"><div class="title">'+esc(t.title)+'</div><div class="meta"><span class="biz">'+(BIZ[t.biz]||"Life")+'</span>'+
-    (t.time?'<span class="mono">'+esc(t12(t.time))+'</span>':'')+(o.routine?'<span>Every day</span>':'')+'</div></div>'+
-    '<div class="acts">'+
-    (!o.routine&&!done?'<button class="ic" data-act="tomorrow" data-id="'+esc(t.id)+'" aria-label="Move to next day">→</button>':'')+
-    (S.pendingDel===t.id?'<button class="ic danger" data-act="del" data-id="'+esc(t.id)+'" data-kind="'+(o.routine?"routines":"tasks")+'">Delete?</button>'
-      :'<button class="ic" data-act="askdel" data-id="'+esc(t.id)+'" aria-label="Delete">✕</button>')+'</div></div>';
-}
-const byTime=(a,b)=>(a.time||"99")<(b.time||"99")?-1:(a.time||"99")>(b.time||"99")?1:0;
-const passes=t=>S.filter==="all"||t.biz===S.filter;
-const tasksOn=k=>list("tasks").filter(t=>t.date===k&&t.kind!=="event").sort(byTime);
-const eventsOn=k=>list("tasks").filter(t=>t.date===k&&t.kind==="event");
 function renderToday(){
   const k=todayKey();
   const all=[...list("routines").map(r=>({r,routine:true})),...tasksOn(k).map(t=>({r:t}))].sort((a,b)=>byTime(a.r,b.r));
   const d=all.filter(x=>x.routine?(S.checks[k]||{})[x.r.id]:x.r.done).length;
   $("today-count").textContent=all.length?d+" of "+all.length+" done":"";
+  const w=WEEK[new Date().getDay()];
+  $("today-rhythm").innerHTML="Today's content slot: <b>"+esc(w.reel)+"</b>";
   const ev=eventsOn(k).map(e=>'<div class="event" style="margin:8px 0;display:inline-block">'+esc(e.title)+'</div>').join(" ");
   $("today-list").innerHTML=ev+(all.length?all.map(x=>taskRow(x.r,{routine:x.routine,day:k})).join(""):'<div class="empty">Nothing planned for today. Add a task below.</div>');
+  // reel suggestions: today's series first, then anything in the bank; rotate daily so it isn't always the same three
+  const bank=list("ideas").filter(i=>(i.status||"bank")==="bank");
+  const seed=Number(k.replace(/-/g,""));
+  const score=i=>(w.series.includes(i.series)?0:1)*1e6+((seed*31+[...i.id].reduce((a,c)=>a+c.charCodeAt(0),0)*17)%9973);
+  const planned=tasksOn(k).some(t=>t.kind==="reel");
+  const picks=bank.sort((a,b)=>score(a)-score(b)).slice(0,3);
+  $("pick-why").textContent=planned?"A reel is already on today's list. These are spares if you have time.":(w.series.length?"Matched to today's slot first. Tap one to put it on today's list at 7 PM.":"Sunday is for batch shooting: schedule this week's reels from the Ideas tab.");
+  $("pick").innerHTML=picks.length?picks.map(i=>ideaCard(i,true)).join(""):'<div class="empty">Your idea bank is empty. Add ideas in the Ideas tab.</div>';
+  let h="";const t=parse(k);
+  for(let i=1;i<=7;i++){const kk=key(addDays(t,i));h+=dayBlock(kk,i===1?"Tomorrow":"")}
+  $("week").innerHTML=h||'<div class="empty">Nothing planned this week yet.</div>';
 }
 function renderFilters(){
   $("filters").innerHTML=[["all","All"],["san","Sanisha"],["jj","Jainuine"],["pj","Pooja"],["me","Life"]]
     .map(([v,l])=>'<button class="chip" data-act="filter" data-v="'+v+'" aria-pressed="'+(S.filter===v)+'">'+l+'</button>').join("");
 }
-function renderStrip(){
-  const t=parse(todayKey()),lead=(t.getDay()+6)%7;
+function renderCalendar(){
+  if(!S.cal){const t=new Date();S.cal=new Date(t.getFullYear(),t.getMonth(),1)}
+  if(!S.sel)S.sel=todayKey();
+  $("cal-title").textContent=S.cal.toLocaleDateString("en-IN",{month:"long",year:"numeric"});
+  const first=S.cal,lead=(first.getDay()+6)%7,start=addDays(first,-lead),tk=todayKey();
   let h=["M","T","W","T","F","S","S"].map(x=>'<div class="wd">'+x+'</div>').join("");
-  for(let i=0;i<lead;i++)h+='<div class="cell blank"></div>';
-  for(let i=0;i<30;i++){const d=addDays(t,i),k=key(d),ts=tasksOn(k).filter(passes);
-    const ev=eventsOn(k).length>0,alldone=ts.length&&ts.every(x=>x.done);
-    h+='<button class="cell'+(i===0?" today":"")+(ev?" ev":"")+(alldone?" alldone":"")+'" data-act="jump" data-k="'+k+'" aria-label="'+esc(fmtDay(k))+'">'+
-      d.getDate()+'<span class="dots">'+ts.slice(0,6).map(x=>'<i class="dot b-'+esc(x.biz)+'"></i>').join("")+'</span></button>'}
-  $("strip").innerHTML=h;
-}
-function dayBlock(k,rel){
-  const ts=tasksOn(k).filter(passes),ev=eventsOn(k),w=S.wake[k];
-  if(!ts.length&&!ev.length&&!w)return "";
-  return '<div class="day" id="d'+k.replace(/-/g,"")+'"><div class="dayhead"><span class="d">'+esc(fmtDay(k))+'</span>'+
-    (rel?'<span class="rel">'+rel+'</span>':'')+ev.map(e=>'<span class="event">'+esc(e.title)+'</span>').join("")+
+  for(let i=0;i<42;i++){
+    const d=addDays(start,i),k=key(d);
+    if(i>=35&&d.getMonth()!==first.getMonth())break;
+    const ts=tasksOn(k).filter(passes),ev=eventsOn(k).length>0,reel=ts.some(t=>t.kind==="reel");
+    h+='<button class="cell'+(d.getMonth()!==first.getMonth()?" out":"")+(k<tk?" past":"")+(k===tk?" today":"")+(k===S.sel?" sel":"")+(ev?" ev":"")+'" data-act="selday" data-k="'+k+'" aria-label="'+esc(fmtDay(k))+'">'+
+      d.getDate()+'<span class="dots">'+ts.filter(t=>t.kind!=="reel").slice(0,5).map(x=>'<i class="dot b-'+esc(x.biz)+'"></i>').join("")+'</span>'+(reel?'<span class="reelmark">REEL</span>':'')+'</button>'}
+  $("month").innerHTML=h;
+  const k=S.sel,ts=tasksOn(k).filter(passes),ev=eventsOn(k),w=S.wake[k];
+  $("selday").innerHTML='<div class="dayhead"><h3>'+esc(parse(k).toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long"}))+'</h3>'+ev.map(e=>'<span class="event">'+esc(e.title)+'</span>').join("")+
     (w&&w.woke?'<span class="rel mono">woke '+esc(t12(w.woke))+(w.slept?' · bed '+esc(t12(w.slept)):'')+'</span>':'')+'</div>'+
-    (ts.length?'<div class="card"><div class="list">'+ts.map(t=>taskRow(t)).join("")+'</div></div>':'')+'</div>';
-}
-function renderAgenda(){
-  const t=parse(todayKey());let h="";
-  for(let i=1;i<30;i++){const k=key(addDays(t,i));h+=dayBlock(k,i===1?"Tomorrow":"in "+i+" days")}
-  $("agenda").innerHTML=h||'<div class="empty">No tasks in the next 30 days yet.</div>';
+    '<div class="card"><div class="list">'+(ts.length?ts.map(t=>taskRow(t)).join(""):'<div class="empty">Nothing on this day.</div>')+'</div></div>'+
+    '<form class="add" id="add-day" style="margin-top:8px"><input class="full" type="text" id="d-title" placeholder="Add to '+esc(fmtDay(k))+'…" required autocomplete="off">'+
+    '<input type="time" id="d-time" aria-label="Time (optional)"><select id="d-biz" aria-label="Business"><option value="me">Life</option><option value="pj">Pooja Jewellers</option><option value="san">Sanisha</option><option value="jj">Jainuine Jeweller</option></select>'+
+    '<button class="btn full" type="submit">Add</button></form>';
+  let a="";const t=parse(tk);
+  for(let i=0;i<30;i++){const kk=key(addDays(t,i));a+=dayBlock(kk,i===0?"Today":i===1?"Tomorrow":"in "+i+" days")}
+  $("agenda").innerHTML=a||'<div class="empty">Nothing in the next 30 days yet.</div>';
   $("btn-past").textContent=S.showPast?"Hide past days":"Show past days";
   $("past").hidden=!S.showPast;
-  if(S.showPast){const tk=todayKey();
-    const keys=[...new Set([...list("tasks").map(x=>x.date),...Object.keys(S.wake)])].filter(k=>k&&k<tk).sort().reverse();
-    $("past").innerHTML=keys.map(k=>dayBlock(k,"")).join("")||'<div class="empty">No past days yet.</div>'}
+  if(S.showPast){const keys=[...new Set([...list("tasks").map(x=>x.date),...Object.keys(S.wake)])].filter(x=>x&&x<tk).sort().reverse();
+    $("past").innerHTML=keys.map(x=>dayBlock(x,"")).join("")||'<div class="empty">No past days yet.</div>'}
+}
+function renderIdeas(){
+  const all=list("ideas");
+  const cnt=s=>all.filter(i=>(i.status||"bank")===s).length;
+  $("idea-count").textContent=cnt("bank")+" waiting · "+cnt("scheduled")+" planned · "+cnt("posted")+" posted";
+  $("idea-filters").innerHTML=[["all","All accounts"],["jj","Jainuine"],["pj","Pooja"],["san","Sanisha"]]
+    .map(([v,l])=>'<button class="chip" data-act="ifilter" data-v="'+v+'" aria-pressed="'+(S.ifilter===v)+'">'+l+'</button>').join("");
+  $("idea-status").innerHTML=[["bank","Waiting"],["scheduled","Planned"],["posted","Posted"]]
+    .map(([v,l])=>'<button class="chip" data-act="istatus" data-v="'+v+'" aria-pressed="'+(S.istatus===v)+'">'+l+' · '+cnt(v)+'</button>').join("");
+  const shown=all.filter(i=>(i.status||"bank")===S.istatus&&(S.ifilter==="all"||i.biz===S.ifilter||i.collab===S.ifilter))
+    .sort((a,b)=>S.istatus==="scheduled"?(a.date<b.date?-1:1):(a.series||"").localeCompare(b.series||"")||a.title.localeCompare(b.title));
+  $("ideas").innerHTML=shown.length?shown.map(i=>ideaCard(i,false)).join(""):'<div class="empty">'+(all.length?"Nothing here yet.":"Your idea bank will appear here once the planner connects.")+'</div>';
+}
+function renderPlaybook(){
+  const td=new Date().getDay();
+  $("pb-week").innerHTML=WEEK.slice(1).concat(WEEK[0]).map((w,i)=>{const isT=(i+1)%7===td;return '<tr'+(isT?' style="background:var(--gold-soft)"':'')+'><td><b>'+w.d+'</b>'+(isT?' · today':'')+'</td><td>'+esc(w.reel)+'</td><td>'+esc(w.collab)+'</td><td>'+esc(w.story)+'</td></tr>'}).join("");
+  const s=wakeStats(),base=s.avgWake!=null?s.avgWake:9*60;
+  $("pb-wake-note").textContent=s.avgWake!=null?"Your average wake time over "+s.n+" day"+(s.n>1?"s":"")+" is "+fromMin(s.avgWake)+". The plan below moves with it.":"Using 9:00 AM until you've logged a few mornings with \"I'm awake\".";
+  // anchor on the wake time, but keep the post slots near 1 PM and 7-9 PM and every row in order
+  const slot1=Math.max(base+120,13*60),shoot=slot1+90,slot2=Math.max(19*60,shoot+120),night=Math.max(22*60,slot2+60);
+  const rows=[[base,"Wake. Water, no phone for 15 minutes."],[base+30,"Check the rate bar; post the gold & silver rate Story on Pooja Jewellers."],[base+60,"Shop or desk work. Note any customer question: it's tomorrow's reel."],
+    [slot1,"Post slot 1 if today's reel is ready. 15 minutes replying to comments and DMs on all three accounts."],
+    [shoot,"Shoot window: 30–45 minutes for today's or tomorrow's reel"+(shoot>17*60+30?". It's after sunset: use the LED, not the tube lights.":", while daylight is good.")],
+    [slot2,"Post slot 2. Reply to every comment in the first hour."],
+    [night,"Nightly stock sheet. Tick off today in Pointbreak and look at tomorrow."]];
+  $("pb-day").innerHTML=rows.map(([at,txt])=>'<tr><td class="mono" style="white-space:nowrap">'+fromMin(at)+'</td><td>'+esc(txt)+'</td></tr>').join("");
 }
 function renderChats(){
   const cs=list("chats");if(!cs.length)return;
@@ -396,24 +727,50 @@ function renderChats(){
 }
 function render(){
   $("today-label").textContent=new Date().toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long"});
-  renderWake();renderToday();renderFilters();renderStrip();renderAgenda();renderChats();
+  ["today","calendar","ideas","playbook"].forEach(v=>{$("v-"+v).hidden=S.view!==v});
+  document.querySelectorAll(".tab").forEach(b=>b.setAttribute("aria-current",b.dataset.v===S.view?"page":"false"));
+  renderWake();renderFilters();
+  if(S.view==="today"){renderToday();renderChats()}
+  if(S.view==="calendar")renderCalendar();
+  if(S.view==="ideas")renderIdeas();
+  if(S.view==="playbook")renderPlaybook();
 }
 
 /* ================= events ================= */
 document.addEventListener("click",e=>{
   const b=e.target.closest("[data-act]");if(!b)return;
   const act=b.dataset.act,id=b.dataset.id;
-  if(act==="jump"){const el=document.getElementById("d"+b.dataset.k.replace(/-/g,""));(el||$("h-today")).scrollIntoView({behavior:"smooth"});return}
+  if(act==="go"){S.view=b.dataset.v;ls.set("pb-view",S.view);render();window.scrollTo(0,0);return}
   if(act==="filter"){S.filter=b.dataset.v;render();return}
-  if(act==="past"){S.showPast=!S.showPast;renderAgenda();return}
+  if(act==="ifilter"){S.ifilter=b.dataset.v;render();return}
+  if(act==="istatus"){S.istatus=b.dataset.v;render();return}
+  if(act==="cal"){const v=Number(b.dataset.v),t=new Date();S.cal=v===0?new Date(t.getFullYear(),t.getMonth(),1):new Date(S.cal.getFullYear(),S.cal.getMonth()+v,1);if(v===0)S.sel=todayKey();render();return}
+  if(act==="selday"){S.sel=b.dataset.k;render();$("selday").scrollIntoView({behavior:"smooth",block:"nearest"});return}
+  if(act==="past"){S.showPast=!S.showPast;render();return}
   if(act==="reconnect"){$("setup").hidden=false;$("f-link").value=API;$("setup").scrollIntoView();return}
   if(act==="askdel"){S.pendingDel=id;render();setTimeout(()=>{if(S.pendingDel===id){S.pendingDel=null;render()}},4000);return}
   if(act==="wake"){const k=todayKey(),d=new Date();write([{op:"set",c:"wake",id:k,data:Object.assign({},S.wake[k],{woke:hm(d),wokeAt:d.toISOString()})}]);return}
   if(act==="sleep"){const d=new Date(),k=d.getHours()<5?key(addDays(d,-1)):key(d);write([{op:"set",c:"wake",id:k,data:Object.assign({},S.wake[k],{slept:hm(d),sleptAt:d.toISOString()})}]);b.textContent="Good night";return}
-  if(act==="toggle"){const t=S.tasks[id];if(t)write([{op:"update",c:"tasks",id,data:{done:!t.done}}]);return}
+  if(act==="toggle"){const t=S.tasks[id];if(!t)return;const ops=[{op:"update",c:"tasks",id,data:{done:!t.done}}];
+    if(t.kind==="reel"&&S.ideas[t.ideaId])ops.push({op:"set",c:"ideas",id:t.ideaId,data:Object.assign({},S.ideas[t.ideaId],{status:t.done?"scheduled":"posted"})});
+    write(ops);return}
   if(act==="rtoggle"){const day=b.dataset.day,cur=Object.assign({},S.checks[day]);cur[id]=!cur[id];write([{op:"set",c:"checks",id:day,data:cur}]);return}
-  if(act==="tomorrow"){const t=S.tasks[id];if(t)write([{op:"update",c:"tasks",id,data:{date:key(addDays(parse(t.date),1))}}]);return}
-  if(act==="del"){S.pendingDel=null;write([{op:"delete",c:b.dataset.kind,id}]);return}
+  if(act==="tomorrow"){const t=S.tasks[id];if(!t)return;const nd=key(addDays(parse(t.date),1));const ops=[{op:"update",c:"tasks",id,data:{date:nd}}];
+    if(t.kind==="reel"&&S.ideas[t.ideaId])ops.push({op:"set",c:"ideas",id:t.ideaId,data:Object.assign({},S.ideas[t.ideaId],{date:nd})});
+    write(ops);return}
+  if(act==="del"){S.pendingDel=null;const t=S.tasks[id];
+    if(t&&t.kind==="reel"&&S.ideas[t.ideaId]){unscheduleIdea(t.ideaId);return}
+    write([{op:"delete",c:b.dataset.kind,id}]);return}
+  if(act==="sched"){const v=($("dt-"+id)||{}).value;scheduleIdea(id,v||todayKey());return}
+  if(act==="sched-today"){scheduleIdea(id,todayKey());return}
+  if(act==="unsched"){unscheduleIdea(id);return}
+  if(act==="posted"){const i=S.ideas[id];if(!i)return;const ops=[{op:"set",c:"ideas",id,data:Object.assign({},i,{status:"posted"})}];
+    if(S.tasks["reel-"+id])ops.push({op:"update",c:"tasks",id:"reel-"+id,data:{done:true}});write(ops);return}
+  if(act==="rebank"){const i=S.ideas[id];if(!i)return;write([{op:"set",c:"ideas",id,data:Object.assign({},i,{status:"bank",date:""})}]);return}
+});
+document.addEventListener("submit",e=>{
+  if(e.target.id==="add-day"){e.preventDefault();const title=$("d-title").value.trim();if(!title)return;
+    write([{op:"set",c:"tasks",id:newId("t"),data:{title,biz:$("d-biz").value,time:$("d-time").value||"",date:S.sel,done:false,kind:"task",source:"me",createdAt:new Date().toISOString()}}]);}
 });
 $("add").addEventListener("submit",e=>{
   e.preventDefault();const title=$("f-title").value.trim();if(!title)return;
@@ -421,6 +778,11 @@ $("add").addEventListener("submit",e=>{
   if($("f-daily").checked)write([{op:"set",c:"routines",id:newId("r"),data}]);
   else write([{op:"set",c:"tasks",id:newId("t"),data:Object.assign(data,{date:$("f-date").value||todayKey(),done:false,kind:"task"})}]);
   $("f-title").value="";$("f-time").value="";$("f-daily").checked=false;
+});
+$("add-idea").addEventListener("submit",e=>{
+  e.preventDefault();const title=$("i-title").value.trim();if(!title)return;
+  write([{op:"set",c:"ideas",id:newId("i"),data:{title,hook:$("i-hook").value.trim(),biz:$("i-biz").value,collab:$("i-biz").value==="jj"?"":"jj",series:"Mine",format:$("i-format").value,length:"",effort:"",shots:"",why:"",status:"bank"}}]);
+  $("i-title").value="";$("i-hook").value="";
 });
 $("setup-form").addEventListener("submit",e=>{
   e.preventDefault();const v=$("f-link").value.trim();
@@ -431,6 +793,7 @@ $("f-date").value=todayKey();
 
 /* ================= start ================= */
 try{const c=JSON.parse(ls.get("pb-cache")||"null");if(c)COLL.forEach(k=>S[k]=c[k]||{})}catch(e){}
+S.view=["today","calendar","ideas","playbook"].includes(ls.get("pb-view"))?ls.get("pb-view"):"today";
 render();
 if(!API)$("setup").hidden=false;
 pull();loadRates();
