@@ -353,6 +353,12 @@ p.help{display:block}
     <div class="pb">
       <section>
         <div class="eyebrow">Master playbook</div>
+        <div class="box" id="crew-box">
+          <h3>Crew brief for your editor &amp; videographer</h3>
+          <p class="muted">A Google Doc in your Drive with only the reels: when to shoot, when it posts, the shot list and the exact edit. It updates itself whenever you plan, move or post a reel, and every hour. Share it as <b>Viewer</b>.</p>
+          <div class="row" style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn" id="crew-link" href="#" target="_blank" rel="noopener" hidden>Open the crew brief</a><button class="btn ghost" data-act="crew">Update now</button></div>
+          <p class="help" id="crew-note"></p>
+        </div>
         <h2>Festive &amp; launch reels</h2>
         <p class="muted">Every reel with a fixed date: when to shoot it, when it must go live. Missed ones stay here until you reschedule or skip them.</p>
         <div class="chips" id="tl-filter"></div>
@@ -574,12 +580,12 @@ async function loadRates(){
 /* ================= backend (Google Apps Script) ================= */
 let API=ls.get("pb-link")||"";
 function apiUrl(){return API}
-function applyData(d){COLL.forEach(c=>S[c]=d[c]||{});ls.set("pb-cache",JSON.stringify(d));render()}
+function applyData(d,crewUrl){if(crewUrl){S.crewUrl=crewUrl;ls.set("pb-crew",crewUrl)}COLL.forEach(c=>S[c]=d[c]||{});ls.set("pb-cache",JSON.stringify(d));render()}
 async function pull(){
   if(!API)return;
   try{const j=await (await fetch(apiUrl(),{cache:"no-store"})).json();
     if(!j.ok){setStatus(j.error==="bad_key"?"The connection link's key is wrong. Copy it again from the Settings tab.":"The planner answered with an error. Try again shortly.");return}
-    applyData(j.data);setStatus("")}
+    applyData(j.data,j.crewUrl);setStatus("")}
   catch(e){setStatus("Offline. Showing your last saved planner.")}
 }
 let queue=Promise.resolve();
@@ -590,7 +596,7 @@ function write(ops){ // optimistic: apply locally, then send
   const k=new URL(API).searchParams.get("key");
   queue=queue.then(async()=>{
     try{const j=await (await fetch(API.split("?")[0],{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({key:k,ops})})).json();
-      if(j.ok)applyData(j.data);else setStatus("That change didn't save ("+j.error+"). Try again.")}
+      if(j.ok)applyData(j.data,j.crewUrl);else setStatus("That change didn't save ("+j.error+"). Try again.")}
     catch(e){setStatus("That change didn't save. Check your connection and try again.")}
   });
 }
@@ -786,7 +792,9 @@ function renderIdeas(){
   $("ideas").innerHTML=shown.length?shown.map(i=>ideaCard(i,false)).join(""):'<div class="empty">'+(all.length?(S.istatus==="missed"?"Nothing missed. Nice.":"Nothing here yet."):"Your idea bank will appear here once the planner connects.")+'</div>';
 }
 function renderPlaybook(){
-  const tk=todayKey(),P=priority();
+  const tk=todayKey(),P=priority(),cu=S.crewUrl||ls.get("pb-crew")||"";
+  $("crew-link").hidden=!cu;if(cu)$("crew-link").href=cu;
+  if(!cu&&!$("crew-note").textContent)$("crew-note").textContent="Not created yet. Tap Update now.";
   const dated=list("ideas").filter(i=>i.due);
   const grp=i=>{const u=urgency(i);return u.missed?"missed":u.tier===9?"done":"upcoming"};
   const n=g=>dated.filter(i=>grp(i)===g).length;
@@ -867,6 +875,11 @@ document.addEventListener("click",e=>{
   if(act==="skip"){const i=S.ideas[id];if(!i)return;const ops=[{op:"set",c:"ideas",id,data:Object.assign({},i,{status:"skipped"})}];
     if(S.tasks["reel-"+id])ops.push({op:"delete",c:"tasks",id:"reel-"+id});write(ops);return}
   if(act==="sched-due"){const i=S.ideas[id];if(i)scheduleIdea(id,i.due);return}
+  if(act==="crew"){if(!API)return;$("crew-note").textContent="Updating the crew brief…";
+    fetch(apiUrl().replace(/([?&])action=[^&]*/,"$1")+"&action=crew",{cache:"no-store"}).then(r=>r.json()).then(j=>{
+      if(j.ok){S.crewUrl=j.url;ls.set("pb-crew",j.url);$("crew-note").textContent="Updated just now.";render()}
+      else $("crew-note").textContent=/permission|authoriz/i.test(j.error||"")?"Needs a one-time Google permission: run setupCrew in the Apps Script editor.":"Couldn't update ("+j.error+").";
+    }).catch(()=>{$("crew-note").textContent="Couldn't reach the planner. Try again."});return}
   if(act==="tl"){S.tl=b.dataset.v;render();return}
   if(act==="go-missed"){S.view="ideas";S.istatus="missed";ls.set("pb-view","ideas");render();window.scrollTo(0,0);return}
   if(act==="rebank"){const i=S.ideas[id];if(!i)return;write([{op:"set",c:"ideas",id,data:Object.assign({},i,{status:"bank",date:""})}]);return}

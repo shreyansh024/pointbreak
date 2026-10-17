@@ -1,6 +1,6 @@
 // Pointbreak service worker: keeps the app shell available offline.
 // Pages load network-first (so updates show up), everything else cache-first. Live data (rates, planner) is never cached here.
-const CACHE = 'pointbreak-v5';
+const CACHE = 'pointbreak-v6';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL))); self.skipWaiting(); });
 self.addEventListener('activate', e => {
