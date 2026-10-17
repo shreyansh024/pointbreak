@@ -161,6 +161,24 @@ form label.rep input{width:auto}
 .idea.scheduled{border-color:var(--gold)}
 .idea.posted{opacity:.6}
 .pick{display:grid;gap:10px}
+.due{font-size:.82rem;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.due b{font-family:var(--f-mono);font-weight:500}
+.idea.missed{border-color:var(--pj)}
+.alert{background:color-mix(in srgb,var(--pj) 14%,var(--surface));border:1px solid var(--pj);border-radius:12px;padding:10px 12px;display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;font-size:.9rem}
+.prio{display:grid;gap:6px}
+.prio .rank{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:baseline;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 12px}
+.prio .n{font-family:var(--f-mono);color:var(--gold);font-weight:500}
+.prio .rank .muted{grid-column:2}
+.tl{display:grid;gap:8px}
+.tli{display:grid;grid-template-columns:96px 1fr;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;min-width:0}
+.tli.missed{border-color:var(--pj)}
+.tli .when{font-family:var(--f-mono);font-size:.8rem;line-height:1.35}
+.tli .when .sb{color:var(--muted);font-size:.72rem;margin-top:4px}
+.tli .what{display:grid;gap:4px;min-width:0}
+.tli .row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.tl input[type=date]{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px;font-size:14px}
+.btn.sm{padding:6px 10px;font-size:.82rem}
+.cell .duemark{font-family:var(--f-body);font-size:.58rem;letter-spacing:.06em;color:var(--pj);font-weight:600}
 
 /* playbook */
 .pb{display:grid;gap:22px}
@@ -238,6 +256,7 @@ p.help{display:block}
     <section aria-labelledby="h-today">
       <div class="top"><h2 id="h-today">Today</h2><span class="mono" id="today-count" style="color:var(--muted);font-size:.85rem"></span></div>
       <div class="muted" id="today-rhythm" style="font-size:.88rem"></div>
+      <div id="today-alert"></div>
       <div class="card"><div class="list" id="today-list"></div></div>
       <form class="add" id="add">
         <input class="full" type="text" id="f-title" placeholder="Add a task… e.g. Call Mohit about chain order" autocomplete="off" required>
@@ -288,6 +307,7 @@ p.help{display:block}
         <span><i class="dot b-san"></i>Sanisha</span><span><i class="dot b-jj"></i>Jainuine</span>
         <span><i class="dot b-pj"></i>Pooja</span><span><i class="dot b-me"></i>Life</span>
         <span><b class="mono" style="color:var(--gold);font-size:.7rem">REEL</b> reel planned</span>
+        <span><b class="mono" style="color:var(--pj);font-size:.7rem">DUE</b> reel deadline, not planned yet</span>
         <span><i style="width:14px;height:3px;background:var(--gold);display:inline-block"></i>Festival</span>
       </div>
     </section>
@@ -307,6 +327,7 @@ p.help{display:block}
     <section>
       <div class="top"><h2>Reel ideas</h2><span class="mono muted" id="idea-count" style="font-size:.85rem"></span></div>
       <p class="help">Every reel is posted from @thejainuinejeweller as a Collab with the account it's about. Pick a date to put an idea on the calendar. Tick it off there once it's posted.</p>
+      <div class="help" id="idea-prio"></div>
       <div class="chips" id="idea-filters"></div>
       <div class="chips" id="idea-status"></div>
       <div class="ideas" id="ideas"></div>
@@ -332,6 +353,19 @@ p.help{display:block}
     <div class="pb">
       <section>
         <div class="eyebrow">Master playbook</div>
+        <h2>Festive &amp; launch reels</h2>
+        <p class="muted">Every reel with a fixed date: when to shoot it, when it must go live. Missed ones stay here until you reschedule or skip them.</p>
+        <div class="chips" id="tl-filter"></div>
+        <div class="tl" id="pb-tl"></div>
+      </section>
+
+      <section>
+        <h2>Which account comes first</h2>
+        <p class="muted">Worked out from the date every time you open the app, so you never have to decide it again. Deadlines always beat this order; it decides everything else.</p>
+        <div class="prio" id="pb-prio"></div>
+      </section>
+
+      <section>
         <h2>Three accounts, one pipeline</h2>
         <p>You make each reel once. It's posted from <b>@thejainuinejeweller</b> as an Instagram <b>Collab</b> with the account it's about, so it shows on both grids.</p>
         <div class="grid2">
@@ -469,7 +503,7 @@ p.help{display:block}
 const BIZ={san:"Sanisha",jj:"Jainuine",pj:"Pooja",me:"Life"};
 const HANDLE={san:"@sanishajewels",jj:"@thejainuinejeweller",pj:"@poojajewellers.nangloi"};
 const COLL=["tasks","routines","checks","wake","chats","ideas"];
-const S={tasks:{},routines:{},checks:{},wake:{},chats:{},ideas:{},filter:"all",ifilter:"all",istatus:"bank",showPast:false,pendingDel:null,view:"today",cal:null,sel:null};
+const S={tasks:{},routines:{},checks:{},wake:{},chats:{},ideas:{},filter:"all",ifilter:"all",istatus:"bank",showPast:false,pendingDel:null,view:"today",cal:null,sel:null,tl:"upcoming"};
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const pad=n=>String(n).padStart(2,"0");
@@ -567,6 +601,7 @@ const byTime=(a,b)=>(a.time||"99")<(b.time||"99")?-1:(a.time||"99")>(b.time||"99
 const passes=t=>S.filter==="all"||t.biz===S.filter;
 const tasksOn=k=>list("tasks").filter(t=>t.date===k&&t.kind!=="event").sort(byTime);
 const eventsOn=k=>list("tasks").filter(t=>t.date===k&&t.kind==="event");
+const dueOn=k=>list("ideas").filter(i=>i.due===k&&(i.status||"bank")==="bank"&&(S.filter==="all"||i.biz===S.filter));
 function wakeStats(){
   const t=parse(todayKey()),w=[],b=[];
   for(let i=0;i<14;i++){const r=S.wake[key(addDays(t,-i))];if(!r)continue;
@@ -578,13 +613,50 @@ function wakeStats(){
 function scheduleIdea(id,date){
   const i=S.ideas[id];if(!i||!date)return;
   const tid="reel-"+id;
-  write([{op:"set",c:"tasks",id:tid,data:{title:"Reel: "+i.title,biz:i.biz,date,time:"19:00",kind:"reel",ideaId:id,done:false}},
+  write([{op:"set",c:"tasks",id:tid,data:{title:"Reel: "+i.title,biz:i.biz,date,time:i.dueTime||"19:00",kind:"reel",ideaId:id,done:false}},
          {op:"set",c:"ideas",id,data:Object.assign({},i,{status:"scheduled",date})}]);
 }
 function unscheduleIdea(id){
   const i=S.ideas[id];if(!i)return;
   write([{op:"delete",c:"tasks",id:"reel-"+id},{op:"set",c:"ideas",id,data:Object.assign({},i,{status:"bank",date:""})}]);
 }
+
+/* urgency + account priority: recomputed on every render from today's date */
+const DROP0="2026-10-30";   // Sanisha Drop 01; drops repeat every 2 weeks, Friday 8 PM
+const daysBetween=(a,b)=>Math.round((parse(b)-parse(a))/864e5);
+function nextDrop(k){let d=parse(DROP0);while(key(d)<k)d=addDays(d,14);return key(d)}
+function priority(){
+  const k=todayKey(),m=parse(k).getMonth(),festive=m>=9||m<=1,toDrop=daysBetween(k,nextDrop(k));
+  const w={},why={};
+  w.pj=festive?0:1.5; why.pj=festive?"Festival and wedding season (Oct–Feb) is when the shop makes most of its year. Shop reels turn into footfall now.":"Off-season: the shop still gets a reel a week, but growth matters more.";
+  w.jj=festive?1:0;   why.jj=festive?"Every reel goes out from here anyway, so it grows whatever comes first.":"Quiet months are for building the audience that buys in the next season.";
+  w.san=toDrop<=7?0.5:2; why.san=toDrop<=7?"Drop in "+toDrop+" day"+(toDrop===1?"":"s")+": sneak peeks and the live reel can't slip.":"Next drop in "+toDrop+" days. Until the last week before it, Sanisha rides on Collabs.";
+  const order=["pj","jj","san"].sort((a,b)=>w[a]-w[b]);
+  return {w,why,order,toDrop,drop:nextDrop(k)};
+}
+function shootBy(i){return i.due?key(addDays(parse(i.due),-(i.effort==="Shoot day"?3:i.effort==="Medium"?2:1))):""}
+function urgency(i){
+  const st=i.status||"bank",tk=todayKey();
+  if(st==="posted")return{tier:9,label:"Posted",c:"var(--me)"};
+  if(st==="skipped")return{tier:9,label:"Skipped",c:"var(--muted)"};
+  if(st==="scheduled"&&i.date&&i.date<tk)return{tier:0,missed:true,label:"Missed · was planned "+fmtDay(i.date),c:"var(--pj)"};
+  if(st==="bank"&&i.due&&i.due<tk)return{tier:0,missed:true,label:"Missed · was due "+fmtDay(i.due),c:"var(--pj)"};
+  const ref=st==="scheduled"?i.date:i.due;
+  if(!ref)return{tier:4,label:"Anytime",c:"var(--muted)"};
+  const d=daysBetween(tk,ref),when=d===0?"today":d===1?"tomorrow":fmtDay(ref);
+  if(st==="scheduled")return{tier:d<=2?1:2,label:"Planned · "+when,c:"var(--gold)",days:d};
+  const sd=daysBetween(tk,shootBy(i));   // a reel that needs shooting today is urgent even if it posts later
+  if(sd<=0)return{tier:1,label:"Shoot today · post "+when,c:"var(--pj)",days:d};
+  if(d<=2)return{tier:1,label:"Urgent · post "+when,c:"var(--pj)",days:d};
+  if(d<=7)return{tier:2,label:"This week · "+when,c:"var(--gold)",days:d};
+  if(d<=14)return{tier:3,label:"Soon · "+when,c:"var(--jj)",days:d};
+  return{tier:5,label:"Later · "+when,c:"var(--muted)",days:d};
+}
+function ideaScore(i,P){
+  const u=urgency(i),wb=P.w[i.biz]??2,wc=i.collab?(P.w[i.collab]??2)+0.3:9;
+  return u.tier*1e4+(u.days??500)*10+Math.min(wb,wc);
+}
+const missedIdeas=()=>list("ideas").filter(i=>urgency(i).missed);
 
 /* ================= render: shared ================= */
 function taskRow(t,o={}){
@@ -609,20 +681,21 @@ function dayBlock(k,rel){
     (ts.length?'<div class="card"><div class="list">'+ts.map(t=>taskRow(t)).join("")+'</div></div>':'')+'</div>';
 }
 function ideaCard(i,compact){
-  const st=i.status||"bank";
-  return '<article class="idea b-'+esc(i.biz)+' '+st+'">'+
-    '<div class="head"><span class="pill">'+esc(BIZ[i.biz])+'</span>'+(i.collab?'<span class="muted" style="font-size:.78rem">Collab: '+esc(BIZ[i.collab]||i.collab)+'</span>':'')+
-    '<span class="pill" style="--c:var(--muted)">'+esc(i.series||i.format)+'</span>'+
-    (st==="scheduled"?'<span class="pill" style="--c:var(--gold)">'+esc(fmtDay(i.date))+'</span>':'')+(st==="posted"?'<span class="pill" style="--c:var(--me)">Posted</span>':'')+'</div>'+
-    '<h3>'+esc(i.title)+'</h3>'+(i.hook?'<p class="hook">“'+esc(i.hook)+'”</p>':'')+
+  const st=i.status||"bank",u=urgency(i);
+  const dueLine=i.due?'<div class="due"><span class="muted">Post by</span><b>'+esc(fmtDay(i.due))+(i.dueTime?' · '+esc(t12(i.dueTime)):'')+'</b><span class="muted">· shoot by</span><b>'+esc(fmtDay(shootBy(i)))+'</b></div>':'';
+  let actions;
+  if(u.missed)actions='<input type="date" id="dt-'+esc(i.id)+'" value="'+todayKey()+'" aria-label="New post date"><button class="btn" data-act="sched" data-id="'+esc(i.id)+'">Reschedule</button><button class="btn ghost" data-act="skip" data-id="'+esc(i.id)+'">Skip it</button>';
+  else if(st==="bank")actions=compact?'<button class="btn" data-act="sched-today" data-id="'+esc(i.id)+'">Shoot &amp; post today</button>'
+        :'<input type="date" id="dt-'+esc(i.id)+'" value="'+(i.due&&i.due>=todayKey()?i.due:todayKey())+'" aria-label="Post date"><button class="btn" data-act="sched" data-id="'+esc(i.id)+'">Add to calendar</button>';
+  else if(st==="scheduled")actions='<button class="btn ghost" data-act="unsched" data-id="'+esc(i.id)+'">Take off calendar</button><button class="btn ghost" data-act="posted" data-id="'+esc(i.id)+'">Mark posted</button>';
+  else actions='<button class="btn ghost" data-act="rebank" data-id="'+esc(i.id)+'">Back to ideas</button>';
+  return '<article class="idea b-'+esc(i.biz)+' '+st+(u.missed?" missed":"")+'">'+
+    '<div class="head"><span class="pill" style="--c:'+u.c+'">'+esc(u.label)+'</span><span class="pill">'+esc(BIZ[i.biz])+'</span>'+(i.collab?'<span class="muted" style="font-size:.78rem">Collab: '+esc(BIZ[i.collab]||i.collab)+'</span>':'')+
+    '<span class="pill" style="--c:var(--muted)">'+esc(i.series||i.format)+'</span></div>'+
+    '<h3>'+esc(i.title)+'</h3>'+(i.hook?'<p class="hook">“'+esc(i.hook)+'”</p>':'')+dueLine+
     '<div class="meta"><span>'+esc(i.format||"Reel")+(i.length?' · '+esc(i.length):'')+'</span>'+(i.effort?'<span>'+esc(i.effort)+'</span>':'')+'</div>'+
     (!compact&&(i.shots||i.why)?'<details><summary>Shots &amp; why it works</summary><div class="shots">'+(i.shots?'<div>'+esc(i.shots)+'</div>':'')+(i.why?'<div class="muted">'+esc(i.why)+'</div>':'')+'</div></details>':'')+
-    '<div class="row">'+
-    (st==="bank"?(compact?'<button class="btn" data-act="sched-today" data-id="'+esc(i.id)+'">Shoot &amp; post today</button>'
-        :'<input type="date" id="dt-'+esc(i.id)+'" value="'+todayKey()+'" aria-label="Post date"><button class="btn" data-act="sched" data-id="'+esc(i.id)+'">Add to calendar</button>')
-      :st==="scheduled"?'<button class="btn ghost" data-act="unsched" data-id="'+esc(i.id)+'">Take off calendar</button><button class="btn ghost" data-act="posted" data-id="'+esc(i.id)+'">Mark posted</button>'
-      :'<button class="btn ghost" data-act="rebank" data-id="'+esc(i.id)+'">Back to ideas</button>')+
-    '</div></article>';
+    '<div class="row">'+actions+'</div></article>';
 }
 
 /* ================= render: views ================= */
@@ -650,12 +723,15 @@ function renderToday(){
   const ev=eventsOn(k).map(e=>'<div class="event" style="margin:8px 0;display:inline-block">'+esc(e.title)+'</div>').join(" ");
   $("today-list").innerHTML=ev+(all.length?all.map(x=>taskRow(x.r,{routine:x.routine,day:k})).join(""):'<div class="empty">Nothing planned for today. Add a task below.</div>');
   // reel suggestions: today's series first, then anything in the bank; rotate daily so it isn't always the same three
-  const bank=list("ideas").filter(i=>(i.status||"bank")==="bank");
+  const miss=missedIdeas().length;
+  $("today-alert").innerHTML=miss?'<div class="alert"><span><b>'+miss+' reel'+(miss>1?"s":"")+' missed.</b> Reschedule or skip so the plan stays honest.</span><button class="btn sm" data-act="go-missed">Fix now</button></div>':'';
+  // reel suggestions: deadlines first, then today's slot, then the account that matters most right now; rotates daily
+  const P=priority(),bank=list("ideas").filter(i=>(i.status||"bank")==="bank"&&!urgency(i).missed);
   const seed=Number(k.replace(/-/g,""));
-  const score=i=>(w.series.includes(i.series)?0:1)*1e6+((seed*31+[...i.id].reduce((a,c)=>a+c.charCodeAt(0),0)*17)%9973);
+  const score=i=>{const u=urgency(i);return (u.tier<4?u.tier*1e7+(u.days||0)*1e5:4e7+(w.series.includes(i.series)?0:1)*1e6+Math.min(P.w[i.biz]??2,(P.w[i.collab]??2)+.3)*1e5)+((seed*31+[...i.id].reduce((a,c)=>a+c.charCodeAt(0),0)*17)%9973)};
   const planned=tasksOn(k).some(t=>t.kind==="reel");
   const picks=bank.sort((a,b)=>score(a)-score(b)).slice(0,3);
-  $("pick-why").textContent=planned?"A reel is already on today's list. These are spares if you have time.":(w.series.length?"Matched to today's slot first. Tap one to put it on today's list at 7 PM.":"Sunday is for batch shooting: schedule this week's reels from the Ideas tab.");
+  $("pick-why").textContent=planned?"A reel is already on today's list. These are spares if you have time.":(w.series.length?"Deadlines first, then today's slot. Tap one to put it on today's list.":"Sunday is for batch shooting: schedule this week's reels from the Ideas tab.");
   $("pick").innerHTML=picks.length?picks.map(i=>ideaCard(i,true)).join(""):'<div class="empty">Your idea bank is empty. Add ideas in the Ideas tab.</div>';
   let h="";const t=parse(k);
   for(let i=1;i<=7;i++){const kk=key(addDays(t,i));h+=dayBlock(kk,i===1?"Tomorrow":"")}
@@ -674,14 +750,15 @@ function renderCalendar(){
   for(let i=0;i<42;i++){
     const d=addDays(start,i),k=key(d);
     if(i>=35&&d.getMonth()!==first.getMonth())break;
-    const ts=tasksOn(k).filter(passes),ev=eventsOn(k).length>0,reel=ts.some(t=>t.kind==="reel");
+    const ts=tasksOn(k).filter(passes),ev=eventsOn(k).length>0,reel=ts.some(t=>t.kind==="reel"),dues=dueOn(k).length>0;
     h+='<button class="cell'+(d.getMonth()!==first.getMonth()?" out":"")+(k<tk?" past":"")+(k===tk?" today":"")+(k===S.sel?" sel":"")+(ev?" ev":"")+'" data-act="selday" data-k="'+k+'" aria-label="'+esc(fmtDay(k))+'">'+
-      d.getDate()+'<span class="dots">'+ts.filter(t=>t.kind!=="reel").slice(0,5).map(x=>'<i class="dot b-'+esc(x.biz)+'"></i>').join("")+'</span>'+(reel?'<span class="reelmark">REEL</span>':'')+'</button>'}
+      d.getDate()+'<span class="dots">'+ts.filter(t=>t.kind!=="reel").slice(0,5).map(x=>'<i class="dot b-'+esc(x.biz)+'"></i>').join("")+'</span>'+(reel?'<span class="reelmark">REEL</span>':'')+(dues&&!reel?'<span class="duemark">DUE</span>':'')+'</button>'}
   $("month").innerHTML=h;
   const k=S.sel,ts=tasksOn(k).filter(passes),ev=eventsOn(k),w=S.wake[k];
   $("selday").innerHTML='<div class="dayhead"><h3>'+esc(parse(k).toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long"}))+'</h3>'+ev.map(e=>'<span class="event">'+esc(e.title)+'</span>').join("")+
     (w&&w.woke?'<span class="rel mono">woke '+esc(t12(w.woke))+(w.slept?' · bed '+esc(t12(w.slept)):'')+'</span>':'')+'</div>'+
     '<div class="card"><div class="list">'+(ts.length?ts.map(t=>taskRow(t)).join(""):'<div class="empty">Nothing on this day.</div>')+'</div></div>'+
+    dueOn(k).map(i=>'<div class="alert" style="margin-top:8px;background:var(--surface);border-style:dashed"><span><b>Reel due '+esc(t12(i.dueTime||"19:00"))+':</b> '+esc(i.title)+' <span class="muted">· shoot by '+esc(fmtDay(shootBy(i)))+'</span></span>'+(k>=todayKey()?'<button class="btn sm" data-act="sched-due" data-id="'+esc(i.id)+'">Plan it</button>':'<button class="btn sm" data-act="go-missed">Fix</button>')+'</div>').join("")+
     '<form class="add" id="add-day" style="margin-top:8px"><input class="full" type="text" id="d-title" placeholder="Add to '+esc(fmtDay(k))+'…" required autocomplete="off">'+
     '<input type="time" id="d-time" aria-label="Time (optional)"><select id="d-biz" aria-label="Business"><option value="me">Life</option><option value="pj">Pooja Jewellers</option><option value="san">Sanisha</option><option value="jj">Jainuine Jeweller</option></select>'+
     '<button class="btn full" type="submit">Add</button></form>';
@@ -694,18 +771,39 @@ function renderCalendar(){
     $("past").innerHTML=keys.map(x=>dayBlock(x,"")).join("")||'<div class="empty">No past days yet.</div>'}
 }
 function renderIdeas(){
-  const all=list("ideas");
-  const cnt=s=>all.filter(i=>(i.status||"bank")===s).length;
+  const all=list("ideas"),P=priority();
+  const bucket=i=>{const u=urgency(i);if(u.missed)return "missed";return i.status||"bank"};
+  const cnt=s=>all.filter(i=>bucket(i)===s).length;
   $("idea-count").textContent=cnt("bank")+" waiting · "+cnt("scheduled")+" planned · "+cnt("posted")+" posted";
+  $("idea-prio").innerHTML="Sorted by urgency: <b>deadlines first</b>, then <b>"+P.order.map(b=>BIZ[b]).join(" → ")+"</b> (see Playbook for why).";
   $("idea-filters").innerHTML=[["all","All accounts"],["jj","Jainuine"],["pj","Pooja"],["san","Sanisha"]]
     .map(([v,l])=>'<button class="chip" data-act="ifilter" data-v="'+v+'" aria-pressed="'+(S.ifilter===v)+'">'+l+'</button>').join("");
-  $("idea-status").innerHTML=[["bank","Waiting"],["scheduled","Planned"],["posted","Posted"]]
-    .map(([v,l])=>'<button class="chip" data-act="istatus" data-v="'+v+'" aria-pressed="'+(S.istatus===v)+'">'+l+' · '+cnt(v)+'</button>').join("");
-  const shown=all.filter(i=>(i.status||"bank")===S.istatus&&(S.ifilter==="all"||i.biz===S.ifilter||i.collab===S.ifilter))
-    .sort((a,b)=>S.istatus==="scheduled"?(a.date<b.date?-1:1):(a.series||"").localeCompare(b.series||"")||a.title.localeCompare(b.title));
-  $("ideas").innerHTML=shown.length?shown.map(i=>ideaCard(i,false)).join(""):'<div class="empty">'+(all.length?"Nothing here yet.":"Your idea bank will appear here once the planner connects.")+'</div>';
+  $("idea-status").innerHTML=[["bank","Waiting"],["scheduled","Planned"],["missed","Missed"],["posted","Posted"]]
+    .map(([v,l])=>'<button class="chip" data-act="istatus" data-v="'+v+'" aria-pressed="'+(S.istatus===v)+'"'+(v==="missed"&&cnt(v)?' style="border-color:var(--pj);color:var(--pj)"':'')+'>'+l+' · '+cnt(v)+'</button>').join("");
+  const want=S.istatus==="posted"?["posted","skipped"]:[S.istatus];
+  const shown=all.filter(i=>want.includes(bucket(i))&&(S.ifilter==="all"||i.biz===S.ifilter||i.collab===S.ifilter))
+    .sort((a,b)=>ideaScore(a,P)-ideaScore(b,P)||a.title.localeCompare(b.title));
+  $("ideas").innerHTML=shown.length?shown.map(i=>ideaCard(i,false)).join(""):'<div class="empty">'+(all.length?(S.istatus==="missed"?"Nothing missed. Nice.":"Nothing here yet."):"Your idea bank will appear here once the planner connects.")+'</div>';
 }
 function renderPlaybook(){
+  const tk=todayKey(),P=priority();
+  const dated=list("ideas").filter(i=>i.due);
+  const grp=i=>{const u=urgency(i);return u.missed?"missed":u.tier===9?"done":"upcoming"};
+  const n=g=>dated.filter(i=>grp(i)===g).length;
+  $("tl-filter").innerHTML=[["upcoming","Upcoming"],["missed","Missed"],["done","Done"]]
+    .map(([v,l])=>'<button class="chip" data-act="tl" data-v="'+v+'" aria-pressed="'+(S.tl===v)+'"'+(v==="missed"&&n(v)?' style="border-color:var(--pj);color:var(--pj)"':'')+'>'+l+' · '+n(v)+'</button>').join("");
+  const tlRows=dated.filter(i=>grp(i)===S.tl).sort((a,b)=>S.tl==="done"?(b.due<a.due?-1:1):(a.due<b.due?-1:a.due>b.due?1:(a.dueTime||"")<(b.dueTime||"")?-1:1));
+  $("pb-tl").innerHTML=tlRows.length?tlRows.map(i=>{const u=urgency(i),st=i.status||"bank",sb=shootBy(i);
+    let act="";
+    if(u.missed)act='<div class="row"><input type="date" id="dt-'+esc(i.id)+'" value="'+tk+'" aria-label="New post date"><button class="btn sm" data-act="sched" data-id="'+esc(i.id)+'">Reschedule</button><button class="btn sm ghost" data-act="skip" data-id="'+esc(i.id)+'">Skip</button></div>';
+    else if(st==="bank")act='<button class="btn sm" data-act="sched-due" data-id="'+esc(i.id)+'">Plan for '+esc(fmtDay(i.due))+'</button>';
+    else if(st==="scheduled")act='<button class="btn sm ghost" data-act="posted" data-id="'+esc(i.id)+'">Mark posted</button>';
+    else if(st==="skipped")act='<button class="btn sm ghost" data-act="rebank" data-id="'+esc(i.id)+'">Undo skip</button>';
+    return '<div class="tli b-'+esc(i.biz)+(u.missed?" missed":"")+'"><div class="when"><b>'+esc(fmtDay(i.due))+'</b><br>'+esc(t12(i.dueTime||"19:00"))+
+      '<div class="sb"'+(sb<tk&&st==="bank"&&!u.missed?' style="color:var(--pj)"':'')+'>shoot by<br>'+esc(fmtDay(sb))+'</div></div>'+
+      '<div class="what"><b>'+esc(i.title)+'</b><div class="row"><span class="pill">'+esc(BIZ[i.biz])+'</span><span class="muted" style="font-size:.8rem">'+esc(i.format||"Reel")+'</span><span class="pill" style="--c:'+u.c+'">'+esc(u.label)+'</span></div>'+(act?'<div>'+act+'</div>':'')+'</div></div>'}).join("")
+    :'<div class="empty">'+(S.tl==="missed"?"Nothing missed. Nice.":S.tl==="done"?"Nothing posted from this list yet.":"No dated reels coming up.")+'</div>';
+  $("pb-prio").innerHTML=P.order.map((b,ix)=>'<div class="rank b-'+b+'"><span class="n">'+(ix+1)+'</span><b>'+esc(HANDLE[b])+'</b><span class="muted">'+esc(P.why[b])+'</span></div>').join("");
   const td=new Date().getDay();
   $("pb-week").innerHTML=WEEK.slice(1).concat(WEEK[0]).map((w,i)=>{const isT=(i+1)%7===td;return '<tr'+(isT?' style="background:var(--gold-soft)"':'')+'><td><b>'+w.d+'</b>'+(isT?' · today':'')+'</td><td>'+esc(w.reel)+'</td><td>'+esc(w.collab)+'</td><td>'+esc(w.story)+'</td></tr>'}).join("");
   const s=wakeStats(),base=s.avgWake!=null?s.avgWake:9*60;
@@ -766,6 +864,11 @@ document.addEventListener("click",e=>{
   if(act==="unsched"){unscheduleIdea(id);return}
   if(act==="posted"){const i=S.ideas[id];if(!i)return;const ops=[{op:"set",c:"ideas",id,data:Object.assign({},i,{status:"posted"})}];
     if(S.tasks["reel-"+id])ops.push({op:"update",c:"tasks",id:"reel-"+id,data:{done:true}});write(ops);return}
+  if(act==="skip"){const i=S.ideas[id];if(!i)return;const ops=[{op:"set",c:"ideas",id,data:Object.assign({},i,{status:"skipped"})}];
+    if(S.tasks["reel-"+id])ops.push({op:"delete",c:"tasks",id:"reel-"+id});write(ops);return}
+  if(act==="sched-due"){const i=S.ideas[id];if(i)scheduleIdea(id,i.due);return}
+  if(act==="tl"){S.tl=b.dataset.v;render();return}
+  if(act==="go-missed"){S.view="ideas";S.istatus="missed";ls.set("pb-view","ideas");render();window.scrollTo(0,0);return}
   if(act==="rebank"){const i=S.ideas[id];if(!i)return;write([{op:"set",c:"ideas",id,data:Object.assign({},i,{status:"bank",date:""})}]);return}
 });
 document.addEventListener("submit",e=>{
