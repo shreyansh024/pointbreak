@@ -352,7 +352,7 @@ p.help{display:block}
     <section>
       <div class="top"><h2>Reel ideas</h2><span class="mono muted" id="idea-count" style="font-size:.85rem"></span></div>
       <p class="help">Every reel is posted from @thejainuinejeweller as a Collab with the account it's about. Pick a date to put an idea on the calendar. Tick it off there once it's posted.</p>
-      <div class="help" id="idea-prio"></div>
+      <p class="help" id="idea-prio"></p>
       <div class="chips" id="idea-filters"></div>
       <div class="chips" id="idea-status"></div>
       <div class="ideas" id="ideas"></div>
@@ -650,7 +650,7 @@ const byTime=(a,b)=>(a.time||"99")<(b.time||"99")?-1:(a.time||"99")>(b.time||"99
 const passes=t=>S.filter==="all"||t.biz===S.filter;
 const tasksOn=k=>list("tasks").filter(t=>t.date===k&&t.kind!=="event").sort(byTime);
 const eventsOn=k=>list("tasks").filter(t=>t.date===k&&t.kind==="event");
-const dueOn=k=>list("ideas").filter(i=>i.due===k&&(i.status||"bank")==="bank"&&(S.filter==="all"||i.biz===S.filter));
+const dueOn=k=>list("ideas").filter(i=>i.due===k&&(i.status||"bank")==="bank"&&!urgency(i).missed&&(S.filter==="all"||i.biz===S.filter));
 function wakeStats(){
   const t=parse(todayKey()),w=[],b=[];
   for(let i=0;i<14;i++){const r=S.wake[key(addDays(t,-i))];if(!r)continue;
@@ -690,6 +690,8 @@ function urgency(i){
   if(st==="skipped")return{tier:9,label:"Skipped",c:"var(--muted)"};
   if(st==="scheduled"&&i.date&&i.date<tk)return{tier:0,missed:true,label:"Missed · was planned "+fmtDay(i.date),c:"var(--pj)"};
   if(st==="bank"&&i.due&&i.due<tk)return{tier:0,missed:true,label:"Missed · was due "+fmtDay(i.due),c:"var(--pj)"};
+  // due today but never planned: its shoot-by day has already gone, so it can't be made in time
+  if(st==="bank"&&i.due&&i.due===tk&&shootBy(i)<tk)return{tier:0,missed:true,label:"Missed · had to be shot by "+fmtDay(shootBy(i)),c:"var(--pj)"};
   const ref=st==="scheduled"?i.date:i.due;
   if(!ref)return{tier:4,label:"Anytime",c:"var(--muted)"};
   const d=daysBetween(tk,ref),when=d===0?"today":d===1?"tomorrow":fmtDay(ref);
@@ -733,7 +735,7 @@ function ideaCard(i,compact){
   const st=i.status||"bank",u=urgency(i);
   const dueLine=i.due?'<div class="due"><span class="muted">Post by</span><b>'+esc(fmtDay(i.due))+(i.dueTime?' · '+esc(t12(i.dueTime)):'')+'</b><span class="muted">· shoot by</span><b>'+esc(fmtDay(shootBy(i)))+'</b></div>':'';
   let actions;
-  if(u.missed)actions='<input type="date" id="dt-'+esc(i.id)+'" value="'+todayKey()+'" aria-label="New post date"><button class="btn" data-act="sched" data-id="'+esc(i.id)+'">Reschedule</button><button class="btn ghost" data-act="skip" data-id="'+esc(i.id)+'">Skip it</button>';
+  if(u.missed)actions='<input type="date" id="dt-'+esc(i.id)+'" value="'+todayKey()+'" aria-label="New post date"><button class="btn" data-act="sched" data-id="'+esc(i.id)+'">Reschedule</button><button class="btn ghost" data-act="posted" data-id="'+esc(i.id)+'">Already posted</button><button class="btn ghost" data-act="skip" data-id="'+esc(i.id)+'">Skip it</button>';
   else if(st==="bank")actions=compact?'<button class="btn" data-act="sched-today" data-id="'+esc(i.id)+'">Shoot &amp; post today</button>'
         :'<input type="date" id="dt-'+esc(i.id)+'" value="'+(i.due&&i.due>=todayKey()?i.due:todayKey())+'" aria-label="Post date"><button class="btn" data-act="sched" data-id="'+esc(i.id)+'">Add to calendar</button>';
   else if(st==="scheduled")actions='<button class="btn ghost" data-act="unsched" data-id="'+esc(i.id)+'">Take off calendar</button><button class="btn ghost" data-act="posted" data-id="'+esc(i.id)+'">Mark posted</button>';
@@ -772,8 +774,7 @@ function renderToday(){
   const ev=eventsOn(k).map(e=>'<div class="event" style="margin:8px 0;display:inline-block">'+esc(e.title)+'</div>').join(" ");
   $("today-list").innerHTML=ev+(all.length?all.map(x=>taskRow(x.r,{routine:x.routine,day:k})).join(""):'<div class="empty">Nothing planned for today. Add a task below.</div>');
   // reel suggestions: today's series first, then anything in the bank; rotate daily so it isn't always the same three
-  const miss=missedIdeas().length;
-  $("today-alert").innerHTML=miss?'<div class="alert"><span><b>'+miss+' reel'+(miss>1?"s":"")+' missed.</b> Reschedule or skip so the plan stays honest.</span><button class="btn sm" data-act="go-missed">Fix now</button></div>':'';
+  $("today-alert").innerHTML="";   // missed reels are only listed under Missed (Ideas and Playbook tabs)
   // reel suggestions: deadlines first, then today's slot, then the account that matters most right now; rotates daily
   const P=priority(),bank=list("ideas").filter(i=>(i.status||"bank")==="bank"&&!urgency(i).missed);
   const seed=Number(k.replace(/-/g,""));
@@ -846,7 +847,7 @@ function renderPlaybook(){
   const tlRows=dated.filter(i=>grp(i)===S.tl).sort((a,b)=>S.tl==="done"?(b.due<a.due?-1:1):(a.due<b.due?-1:a.due>b.due?1:(a.dueTime||"")<(b.dueTime||"")?-1:1));
   $("pb-tl").innerHTML=tlRows.length?tlRows.map(i=>{const u=urgency(i),st=i.status||"bank",sb=shootBy(i);
     let act="";
-    if(u.missed)act='<div class="row"><input type="date" id="dt-'+esc(i.id)+'" value="'+tk+'" aria-label="New post date"><button class="btn sm" data-act="sched" data-id="'+esc(i.id)+'">Reschedule</button><button class="btn sm ghost" data-act="skip" data-id="'+esc(i.id)+'">Skip</button></div>';
+    if(u.missed)act='<div class="row"><input type="date" id="dt-'+esc(i.id)+'" value="'+tk+'" aria-label="New post date"><button class="btn sm" data-act="sched" data-id="'+esc(i.id)+'">Reschedule</button><button class="btn sm ghost" data-act="posted" data-id="'+esc(i.id)+'">Already posted</button><button class="btn sm ghost" data-act="skip" data-id="'+esc(i.id)+'">Skip</button></div>';
     else if(st==="bank")act='<button class="btn sm" data-act="sched-due" data-id="'+esc(i.id)+'">Plan for '+esc(fmtDay(i.due))+'</button>';
     else if(st==="scheduled")act='<button class="btn sm ghost" data-act="posted" data-id="'+esc(i.id)+'">Mark posted</button>';
     else if(st==="skipped")act='<button class="btn sm ghost" data-act="rebank" data-id="'+esc(i.id)+'">Undo skip</button>';
