@@ -72,7 +72,7 @@ section{display:grid;gap:10px;min-width:0}
 
 /* bottom tabs */
 .tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px))}
-.tabs .in{max-width:680px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.tabs .in{max-width:680px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
 .tab{border:0;background:transparent;border-radius:12px;padding:8px 4px;display:grid;justify-items:center;gap:2px;font-size:.75rem;color:var(--muted)}
 .tab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .tab[aria-current="page"]{color:var(--ink);background:var(--sunk);font-weight:600}
@@ -194,6 +194,31 @@ form label.rep input{width:auto}
 .pb th{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500}
 .pb .q{font-family:var(--f-display);font-style:italic;font-size:1.05rem}
 .pb .rule{background:var(--gold-soft);border-radius:12px;padding:10px 12px;font-size:.9rem}
+
+/* team: the AttentionOS team's brief, drafts and plans, from the locked team.enc.json */
+.doclist{display:grid;gap:8px}
+.docitem{display:grid;gap:2px;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;width:100%;min-width:0;color:inherit;text-decoration:none}
+.docitem b{font-weight:600}
+.docitem span{font-size:.8rem;color:var(--muted)}
+.doc{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;display:grid;gap:12px;min-width:0;overflow-wrap:anywhere}
+.doc .sub{font-size:.85rem;color:var(--muted);margin-top:-6px}
+.doc h3{font-size:1.2rem;margin-top:6px}
+.doc h4{font-family:var(--f-body);font-size:1rem;font-weight:600;margin:6px 0 0}
+.doc ul,.doc ol{margin:0;padding-left:20px;display:grid;gap:5px}
+.doc blockquote{margin:0;border-left:3px solid var(--gold);background:var(--gold-soft);border-radius:0 10px 10px 0;padding:8px 12px}
+.doc code{font-family:var(--f-mono);font-size:.85em;background:var(--sunk);border-radius:5px;padding:0 4px}
+.doc hr{border:0;border-top:1px solid var(--line);width:100%;margin:0}
+.doc a{color:var(--gold);font-weight:500}
+.doc table{border-collapse:collapse;min-width:100%;font-size:.88rem}
+.doc .tablewrap{margin-inline:-4px}
+.doc td,.doc th{overflow-wrap:normal;min-width:4.5em}
+.doc td:first-child,.doc th:first-child{white-space:nowrap;min-width:0}
+.doc th,.doc td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.doc th{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.cap{position:relative;background:var(--sunk);border-radius:12px;padding:12px 12px 48px}
+.cap pre{margin:0;white-space:pre-wrap;font-family:var(--f-body);font-size:.95rem;line-height:1.5}
+.cap .btn{position:absolute;right:8px;bottom:8px}
+.back{border:0;background:none;color:var(--ink);font-weight:600;padding:4px 0;justify-self:start}
 
 /* chats */
 .groups{display:grid;gap:12px}
@@ -493,6 +518,23 @@ p.help{display:block}
       </section>
     </div>
   </div>
+
+  <!-- ================= TEAM ================= -->
+  <div class="view" id="v-team" hidden>
+    <section>
+      <div class="top"><h2>Team</h2><span class="mono muted" id="team-at" style="font-size:.8rem"></span></div>
+      <div id="team-lock" hidden style="display:grid;gap:10px">
+        <p class="help">Your AI team's brief, scripts, calendar and approvals open here. They're locked: open any link in your <b>Telegram morning brief</b> once and this phone remembers the key. For the home-screen icon, press and hold a brief link in Telegram → <b>Copy</b>, and paste it here.</p>
+        <p class="help" id="team-lock-msg" style="color:var(--pj)"></p>
+        <form class="add" id="team-form">
+          <input class="full" type="url" id="team-link" placeholder="Paste a link from your Telegram brief" required autocomplete="off">
+          <button class="btn full" type="submit">Unlock</button>
+        </form>
+      </div>
+      <div class="chips" id="team-tabs" role="group" aria-label="Team sections"></div>
+      <div id="team-body" style="display:grid;gap:12px"></div>
+    </section>
+  </div>
 </div>
 
 <nav class="tabs" aria-label="Sections">
@@ -500,6 +542,7 @@ p.help{display:block}
     <button class="tab" data-act="go" data-v="today"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>Today</button>
     <button class="tab" data-act="go" data-v="calendar"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Calendar</button>
     <button class="tab" data-act="go" data-v="ideas"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M3 10h18M7 6l2 4M12 6l2 4M17 6l2 4"/></svg>Ideas</button>
+    <button class="tab" data-act="go" data-v="team"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.2c2.9.3 5 2.6 5 5.8"/></svg>Team</button>
     <button class="tab" data-act="go" data-v="playbook"><svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-2z"/><path d="M8 7h6M8 11h6"/></svg>Playbook</button>
   </div>
 </nav>
@@ -833,20 +876,143 @@ function renderChats(){
 }
 function render(){
   $("today-label").textContent=new Date().toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long"});
-  ["today","calendar","ideas","playbook"].forEach(v=>{$("v-"+v).hidden=S.view!==v});
+  ["today","calendar","ideas","playbook","team"].forEach(v=>{$("v-"+v).hidden=S.view!==v});
+  if(S.view==="team")$("setup").hidden=true;else if(!API)$("setup").hidden=false;
   document.querySelectorAll(".tab").forEach(b=>b.setAttribute("aria-current",b.dataset.v===S.view?"page":"false"));
   renderWake();renderFilters();
   if(S.view==="today"){renderToday();renderChats()}
   if(S.view==="calendar")renderCalendar();
   if(S.view==="ideas")renderIdeas();
   if(S.view==="playbook")renderPlaybook();
+  if(S.view==="team")renderTeam();
+}
+
+/* ================= team (AttentionOS) =================
+   The AI team's brief, drafts, calendar and approvals arrive as team.enc.json, published next to this page by
+   the AttentionOS GitHub Action and locked with AES-256-GCM. The key comes in the "#k=" part of the links in
+   the Telegram brief (never sent to any server); it's kept on this phone and wiped from the address bar. */
+const TEAM_TABS=[["brief","Brief"],["drafts","Drafts"],["calendar","Calendar"],["approvals","Approvals"],["progress","Progress"]];
+const T={key:ls.get("pb-team-key")||"",bundle:null,tab:"brief",stack:[],err:"",tries:0};
+const b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+const b64url=s=>b64(s.replace(/-/g,"+").replace(/_/g,"/")+"===".slice((s.length+3)%4));
+function tabFor(doc){
+  if(/^ops\/briefs\//.test(doc))return "brief";
+  if(/^ops\/(drafts|notes)\//.test(doc)||doc.startsWith("playbook:"))return "drafts";
+  const m=/^ops\/(calendar|approvals|progress)\.md$/.exec(doc);
+  return m?m[1]:/^ops\/results\.md$/.test(doc)?"progress":T.tab;
+}
+function readHash(){   // "#t=<doc>&k=<key>" from a Telegram link; true if it opened the Team tab
+  if(!/^#(t|k)=/.test(location.hash))return false;
+  const h=new URLSearchParams(location.hash.slice(1)),k=h.get("k"),t=h.get("t");
+  if(k){T.key=k;ls.set("pb-team-key",k);T.err=""}
+  history.replaceState(null,"",location.pathname+location.search);   // keep the key out of the address bar
+  S.view="team";ls.set("pb-view","team");
+  T.stack=t?[t]:[];T.tab=t?tabFor(t):"brief";T.tries=0;
+  return true;
+}
+async function loadTeam(){
+  if(!T.key){if(S.view==="team")renderTeam();return}
+  let enc=null;
+  try{const r=await fetch("team.enc.json?_="+Date.now(),{cache:"no-store"});if(!r.ok)throw 0;enc=await r.json();ls.set("pb-team-cache",JSON.stringify(enc));if(T.err==="stale"||T.err==="offline")T.err=""}
+  catch(e){try{enc=JSON.parse(ls.get("pb-team-cache")||"null")}catch(x){}T.err=enc?"stale":"offline"}
+  if(enc){try{const k=await crypto.subtle.importKey("raw",b64url(T.key),"AES-GCM",false,["decrypt"]);
+      T.bundle=JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:"AES-GCM",iv:b64(enc.iv)},k,b64(enc.ct))));
+      if(T.err==="key")T.err=""}
+    catch(e){T.err="key";T.bundle=null}}
+  const want=T.stack[T.stack.length-1];   // a brief sent seconds ago may not be on the site yet: keep checking
+  if(want&&T.bundle&&!T.bundle.docs[want]&&T.tries<9){T.tries++;setTimeout(loadTeam,20000)}
+  if(S.view==="team")renderTeam();
+}
+function mdInline(s){
+  const code=[];
+  s=esc(s).replace(/`([^`]+)`/g,(m,c)=>"\u0000"+(code.push("<code>"+c+"</code>")-1)+"\u0000");
+  s=s.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g,(m,l,h)=>h.startsWith("pb:")
+      ?'<a href="#" data-act="doc" data-doc="'+h.slice(3)+'">'+l+'</a>'
+      :/^https?:/.test(h)?'<a href="'+h+'" target="_blank" rel="noopener">'+l+'</a>':l)
+    .replace(/\*\*(.+?)\*\*/g,"<b>$1</b>")
+    .replace(/(^|[^\w*])\*([^*\n]+?)\*(?!\w)/g,"$1<i>$2</i>")
+    .replace(/(^|[^\w])_([^_\n]+?)_(?!\w)/g,"$1<i>$2</i>");
+  return s.replace(/\u0000(\d+)\u0000/g,(m,i)=>code[i]);
+}
+function mdHtml(md){   // the markdown the team writes: headings, lists, tables, quotes, ``` caption boxes (with Copy)
+  const L=md.split("\n"),out=[];let para=[],list=null,quote=[];
+  const flush=()=>{
+    if(para.length)out.push("<p>"+para.map(mdInline).join("<br>")+"</p>");
+    if(list)out.push("<"+list.tag+">"+list.items.map(x=>"<li>"+mdInline(x)+"</li>").join("")+"</"+list.tag+">");
+    if(quote.length)out.push("<blockquote>"+quote.map(mdInline).join("<br>")+"</blockquote>");
+    para=[];list=null;quote=[]};
+  const sep=r=>/^\s*\|[\s:|-]+\|\s*$/.test(r),cells=r=>r.trim().replace(/^\||\|$/g,"").split("|").map(c=>c.trim());
+  for(let i=0;i<L.length;i++){const l=L[i];let m;
+    if(/^```/.test(l)){flush();const c=[];while(++i<L.length&&!/^```/.test(L[i]))c.push(L[i]);
+      out.push('<div class="cap"><pre>'+esc(c.join("\n"))+'</pre><button class="btn sm ghost" data-act="copy">Copy</button></div>')}
+    else if(/^\s*\|/.test(l)){flush();const rows=[];for(;i<L.length&&/^\s*\|/.test(L[i]);i++)rows.push(L[i]);i--;
+      const head=rows.length>1&&sep(rows[1])?rows[0]:null,body=rows.filter((r,ix)=>!sep(r)&&!(head&&ix===0));
+      out.push('<div class="tablewrap"><table>'+(head?"<thead><tr>"+cells(head).map(c=>"<th>"+mdInline(c)+"</th>").join("")+"</tr></thead>":"")+
+        "<tbody>"+body.map(r=>"<tr>"+cells(r).map(c=>"<td>"+mdInline(c)+"</td>").join("")+"</tr>").join("")+"</tbody></table></div>")}
+    else if(!l.trim()){if(!list)flush()}
+    else if((m=/^(#{1,6})\s+(.*)/.exec(l))){flush();out.push(m[1].length<=2?"<h3>"+mdInline(m[2])+"</h3>":"<h4>"+mdInline(m[2])+"</h4>")}
+    else if(/^\s*(-{3,}|\*{3,})\s*$/.test(l)){flush();out.push("<hr>")}
+    else if((m=/^\s*([-*]|\d+\.)\s+(.*)/.exec(l))){const tag=/\d/.test(m[1])?"ol":"ul";
+      if(para.length||quote.length||(list&&list.tag!==tag))flush();
+      (list=list||{tag,items:[]}).items.push(m[2])}
+    else if(/^>/.test(l)){if(para.length||list)flush();quote.push(l.replace(/^>\s?/,""))}
+    else if(list&&/^\s{2,}\S/.test(l)){list.items[list.items.length-1]+=" "+l.trim()}
+    else{if(list||quote.length)flush();para.push(l)}}
+  flush();return out.join("");
+}
+function docTitle(d){const p=d.title.split(" · ");return{t:p.slice(0,2).join(" · "),sub:p.slice(2).join(" · ")}}
+function docItem(path){const x=docTitle(T.bundle.docs[path]);
+  return '<a class="docitem" href="#" data-act="doc" data-doc="'+esc(path)+'"><b>'+esc(x.t)+'</b>'+(x.sub?'<span>'+esc(x.sub)+'</span>':'')+'</a>'}
+function docView(path){const d=T.bundle.docs[path],x=docTitle(d);
+  return '<article class="doc"><h2>'+esc(x.t)+'</h2>'+(x.sub?'<div class="sub">'+esc(x.sub)+'</div>':'')+mdHtml(d.md)+'</article>'}
+function renderTeam(){
+  const B=T.bundle,locked=!T.key||T.err==="key";
+  $("team-lock").hidden=!locked;
+  $("team-lock-msg").textContent=T.err==="key"?"This phone's key doesn't open the latest update. Open a link from your newest Telegram brief, or paste one here.":"";
+  $("team-tabs").hidden=locked||!B;$("team-body").hidden=locked;
+  if(locked){$("team-at").textContent="";return}
+  if(!B){$("team-body").innerHTML='<div class="empty">'+(T.err==="offline"?"Offline, and nothing saved on this phone yet.":"Opening…")+'</div>';return}
+  const at=new Date(B.at);
+  $("team-at").textContent=(T.err==="stale"?"Offline · from ":"Updated ")+(key(at)===todayKey()?"today":fmtDay(key(at)))+" "+t12(hm(at));
+  $("team-tabs").innerHTML=TEAM_TABS.map(([v,l])=>'<button class="chip" data-act="ttab" data-v="'+v+'" aria-pressed="'+(T.tab===v)+'">'+l+'</button>').join("");
+  const all=Object.keys(B.docs),kind=p=>B.docs[p].kind,briefs=all.filter(p=>kind(p)==="brief").sort().reverse();
+  if(T.stack.length===1&&(T.stack[0]===briefs[0]||/^ops\/(calendar|approvals|progress)\.md$/.test(T.stack[0]))){T.tab=tabFor(T.stack[0]);T.stack=[]}   // a link to what a section already shows opens that section
+  const open=T.stack[T.stack.length-1];
+  let h="";
+  if(open){
+    h='<button class="back" data-act="back">‹ Back</button>'+(B.docs[open]?docView(open)
+      :'<div class="status">'+(T.tries<9?"This page is still on its way. It takes a minute or two after the brief arrives, and Pointbreak keeps checking.":"This page isn't in the latest update. Close and reopen Pointbreak to check again.")+'</div>');
+  }else if(T.tab==="brief"){
+    const notes=all.filter(p=>kind(p)==="note").sort().reverse();
+    h=briefs.length?docView(briefs[0]):'<div class="empty">No brief yet. It arrives every morning at 8:30.</div>';
+    if(notes.length||briefs.length>1)h+='<h3>Earlier</h3><div class="doclist">'+notes.concat(briefs.slice(1)).map(docItem).join("")+'</div>';
+  }else if(T.tab==="drafts"){
+    const drafts=all.filter(p=>kind(p)==="draft"),batch=p=>/^ops\/drafts\/[^/]+\.md$/.test(p),reel=p=>/^(R\d+|[A-Z]|Countdown \w+) · /.test(B.docs[p].title);
+    const group=(name,ps)=>ps.length?'<h3>'+name+'</h3><div class="doclist">'+ps.map(docItem).join("")+'</div>':"";
+    const byTitle=(a,b)=>B.docs[a].title.localeCompare(B.docs[b].title,"en",{numeric:true});
+    h=group("Reels",drafts.filter(p=>!batch(p)&&reel(p)).sort(byTitle))+
+      group("Captions, Stories, WhatsApp & Google",drafts.filter(p=>!batch(p)&&!reel(p)&&/\/festive\//.test(p)).sort(byTitle))+
+      group("Sanisha",drafts.filter(p=>!batch(p)&&!reel(p)&&/\/sanisha\//.test(p)).sort(byTitle))+
+      group("Other",drafts.filter(p=>!batch(p)&&!reel(p)&&!/\/(festive|sanisha)\//.test(p)).sort(byTitle))+
+      group("Whole batches",drafts.filter(batch).sort().reverse());
+  }else{
+    const p=all.find(x=>kind(x)===T.tab);
+    h=p?docView(p):'<div class="empty">Nothing here yet.</div>';
+    const r=T.tab==="progress"&&all.find(x=>kind(x)==="results");if(r)h+=docView(r);
+  }
+  $("team-body").innerHTML=h;
 }
 
 /* ================= events ================= */
 document.addEventListener("click",e=>{
   const b=e.target.closest("[data-act]");if(!b)return;
   const act=b.dataset.act,id=b.dataset.id;
-  if(act==="go"){S.view=b.dataset.v;ls.set("pb-view",S.view);render();window.scrollTo(0,0);return}
+  if(act==="go"){S.view=b.dataset.v;ls.set("pb-view",S.view);if(S.view==="team")T.stack=[];render();window.scrollTo(0,0);return}
+  if(act==="doc"){e.preventDefault();T.stack.push(b.dataset.doc);T.tries=0;renderTeam();window.scrollTo(0,0);return}
+  if(act==="back"){T.stack.pop();renderTeam();window.scrollTo(0,0);return}
+  if(act==="ttab"){T.tab=b.dataset.v;T.stack=[];renderTeam();return}
+  if(act==="copy"){const pre=b.parentNode.querySelector("pre");
+    navigator.clipboard.writeText(pre.textContent).then(()=>{b.textContent="Copied ✓";setTimeout(()=>{b.textContent="Copy"},1600)},()=>{b.textContent="Press and hold the text to copy"});return}
   if(act==="filter"){S.filter=b.dataset.v;render();return}
   if(act==="ifilter"){S.ifilter=b.dataset.v;render();return}
   if(act==="istatus"){S.istatus=b.dataset.v;render();return}
@@ -905,17 +1071,25 @@ $("setup-form").addEventListener("submit",e=>{
   try{const u=new URL(v);if(!u.searchParams.get("key"))throw 0;API=v;ls.set("pb-link",v);$("setup").hidden=true;setStatus("Connecting…");pull()}
   catch(err){setStatus("That link is missing its key. Copy cell B3 from the Settings tab.")}
 });
+$("team-form").addEventListener("submit",e=>{
+  e.preventDefault();
+  try{const u=new URL($("team-link").value.trim());if(!new URLSearchParams(u.hash.slice(1)).get("k"))throw 0;
+    $("team-link").value="";location.hash=u.hash}   // handled like tapping the link: hashchange → readHash
+  catch(err){$("team-lock-msg").textContent="That isn't a Pointbreak link. Copy one from your Telegram brief (it starts with shreyansh024.github.io/pointbreak)."}
+});
 $("f-date").value=todayKey();
 
 /* ================= start ================= */
 try{const c=JSON.parse(ls.get("pb-cache")||"null");if(c)COLL.forEach(k=>S[k]=c[k]||{})}catch(e){}
-S.view=["today","calendar","ideas","playbook"].includes(ls.get("pb-view"))?ls.get("pb-view"):"today";
+S.view=["today","calendar","ideas","playbook","team"].includes(ls.get("pb-view"))?ls.get("pb-view"):"today";
+readHash();
 render();
-if(!API)$("setup").hidden=false;
+loadTeam();
 pull();loadRates();
 setInterval(()=>{if(!document.hidden)loadRates()},30000);
 setInterval(()=>{if(!document.hidden)pull()},60000);
-document.addEventListener("visibilitychange",()=>{if(!document.hidden){render();loadRates();pull()}});
+document.addEventListener("visibilitychange",()=>{if(!document.hidden){render();loadRates();pull();loadTeam()}});
+window.addEventListener("hashchange",()=>{if(readHash()){render();loadTeam()}});
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 })();
 </script>
