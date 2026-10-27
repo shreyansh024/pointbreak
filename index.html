@@ -220,6 +220,18 @@ form label.rep input{width:auto}
 .cap .btn{position:absolute;right:8px;bottom:8px}
 .back{border:0;background:none;color:var(--ink);font-weight:600;padding:4px 0;justify-self:start}
 
+/* task rows: tap ⋯ for plain-word actions; tap a reel for its plan and script */
+.tlink{border:0;background:none;padding:0;text-align:left;color:inherit;font:inherit;cursor:pointer}
+.tlink .title{text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.go{font-size:.78rem;color:var(--gold);font-weight:600;white-space:nowrap}
+.rowacts{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;padding:2px 0 4px 36px}
+.sheet{position:fixed;inset:0;z-index:20;background:rgba(10,4,14,.5);display:flex;align-items:flex-end}
+.sheet-in{background:var(--bg);width:100%;max-width:680px;margin:0 auto;max-height:88vh;overflow:auto;border-radius:20px 20px 0 0;padding:18px 16px calc(24px + env(safe-area-inset-bottom,0px));display:grid;gap:12px}
+.sheet-in .hook{font-family:var(--f-display);font-size:1.2rem;line-height:1.3;font-style:italic}
+.sheet-in .kv{display:grid;gap:4px;font-size:.92rem}
+.sheet-in .kv b{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.sheet-close{justify-self:end;border:0;background:var(--sunk);color:var(--ink);border-radius:999px;padding:6px 14px;font-weight:600}
+
 /* chats */
 .groups{display:grid;gap:12px}
 .group h3{font-size:.95rem;font-family:var(--f-body);padding-top:8px;display:flex;gap:8px;align-items:center}
@@ -265,7 +277,7 @@ p.help{display:block}
 
   <!-- ================= TODAY ================= -->
   <div class="view" id="v-today">
-    <section class="wake" aria-label="Wake log">
+    <section class="wake" aria-label="Wake log" hidden>
       <div class="row">
         <button class="btn-wake" id="btn-wake" data-act="wake">I'm awake</button>
         <button class="btn-bed" id="btn-bed" data-act="sleep">Going to bed</button>
@@ -296,19 +308,19 @@ p.help{display:block}
       </form>
     </section>
 
-    <section aria-labelledby="h-pick">
-      <div class="top"><h2 id="h-pick">Pick today's reel</h2><button class="link-btn" data-act="go" data-v="ideas">All ideas</button></div>
+    <section aria-labelledby="h-pick" id="pick-sec">
+      <div class="top"><h2 id="h-pick">No reel planned today</h2><button class="link-btn" data-act="go" data-v="ideas">All ideas</button></div>
       <p class="help" id="pick-why"></p>
       <div class="pick" id="pick"></div>
     </section>
 
     <section aria-labelledby="h-week">
-      <h2 id="h-week">Next 7 days</h2>
+      <h2 id="h-week">Next 3 days</h2>
       <div class="agenda" id="week"></div>
       <button class="toggle" data-act="go" data-v="calendar">Open the full calendar</button>
     </section>
 
-    <section aria-labelledby="h-chats">
+    <section aria-labelledby="h-chats" hidden>
       <h2 id="h-chats">Chats</h2>
       <p class="help">Your Claude Code chats, grouped by business. These links open in the Claude desktop app on your PC.</p>
       <div class="groups" id="chats"><div class="empty">Your chats will appear here once the planner connects.</div></div>
@@ -340,7 +352,7 @@ p.help{display:block}
       <div id="selday"></div>
     </section>
     <section aria-labelledby="h-up">
-      <h2 id="h-up">Coming up · 30 days</h2>
+      <h2 id="h-up">Coming up</h2>
       <div class="agenda" id="agenda"></div>
       <button class="toggle" id="btn-past" data-act="past">Show past days</button>
       <div class="agenda" id="past" hidden></div>
@@ -537,6 +549,8 @@ p.help{display:block}
   </div>
 </div>
 
+<div class="sheet" id="sheet" hidden><div class="sheet-in" id="sheet-in" role="dialog" aria-modal="true" aria-label="Reel plan"></div></div>
+
 <nav class="tabs" aria-label="Sections">
   <div class="in">
     <button class="tab" data-act="go" data-v="today"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>Today</button>
@@ -712,20 +726,26 @@ const missedIdeas=()=>list("ideas").filter(i=>urgency(i).missed);
 /* ================= render: shared ================= */
 function taskRow(t,o={}){
   const done=o.routine?!!(S.checks[o.day]||{})[t.id]:!!t.done;
-  const reel=t.kind==="reel";
+  const reel=t.kind==="reel",idea=reel&&S.ideas[t.ideaId],open=S.openRow===t.id;
+  const meta='<div class="meta"><span class="biz">'+(BIZ[t.biz]||"Life")+'</span>'+
+    (reel?'<span class="pill" style="--c:var(--gold)">Reel</span>':'')+
+    (t.time?'<span class="mono">'+esc(t12(t.time))+'</span>':'')+(o.routine?'<span>Every day</span>':'')+
+    (idea?'<span class="go">'+(scriptFor(t.ideaId)?"Script ›":"Plan ›")+'</span>':'')+'</div>';
+  const kind=o.routine?"routines":"tasks";
   return '<div class="task b-'+esc(t.biz)+(done?" done":"")+(reel?" reel":"")+'">'+
     '<button class="check" aria-label="'+(done?"Mark not done":"Mark done")+'" data-act="'+(o.routine?"rtoggle":"toggle")+'" data-id="'+esc(t.id)+'" data-day="'+esc(o.day||"")+'"></button>'+
-    '<div class="t"><div class="title">'+esc(t.title)+'</div><div class="meta"><span class="biz">'+(BIZ[t.biz]||"Life")+'</span>'+
-    (reel?'<span class="pill" style="--c:var(--gold)">Reel</span>':'')+
-    (t.time?'<span class="mono">'+esc(t12(t.time))+'</span>':'')+(o.routine?'<span>Every day</span>':'')+'</div></div>'+
-    '<div class="acts">'+
-    (!o.routine&&!done?'<button class="ic" data-act="tomorrow" data-id="'+esc(t.id)+'" aria-label="Move to next day">→</button>':'')+
-    (S.pendingDel===t.id?'<button class="ic danger" data-act="del" data-id="'+esc(t.id)+'" data-kind="'+(o.routine?"routines":"tasks")+'">'+(reel?"Unplan?":"Delete?")+'</button>'
-      :'<button class="ic" data-act="askdel" data-id="'+esc(t.id)+'" aria-label="Delete">✕</button>')+'</div></div>';
+    (idea?'<button class="t tlink" data-act="reel" data-id="'+esc(t.ideaId)+'"><div class="title">'+esc(t.title)+'</div>'+meta+'</button>'
+         :'<div class="t"><div class="title">'+esc(t.title)+'</div>'+meta+'</div>')+
+    '<div class="acts"><button class="ic" data-act="more" data-id="'+esc(t.id)+'" aria-label="More options" aria-expanded="'+open+'">⋯</button></div>'+
+    (open?'<div class="rowacts">'+
+      (!o.routine&&!done?'<button class="btn sm ghost" data-act="tomorrow" data-id="'+esc(t.id)+'">Move to '+esc(t.date?fmtDay(key(addDays(parse(t.date),1))):"next day")+'</button>':'')+
+      (S.pendingDel===t.id?'<button class="btn sm" style="background:var(--pj)" data-act="del" data-id="'+esc(t.id)+'" data-kind="'+kind+'">'+(reel?"Tap again to take it off the calendar":"Tap again to delete")+'</button>'
+        :'<button class="btn sm ghost" data-act="askdel" data-id="'+esc(t.id)+'">'+(reel?"Take off calendar":"Delete")+'</button>')+'</div>':'')+
+    '</div>';
 }
 function dayBlock(k,rel){
-  const ts=tasksOn(k).filter(passes),ev=eventsOn(k),w=S.wake[k];
-  if(!ts.length&&!ev.length&&!w)return "";
+  const ts=tasksOn(k).filter(passes),ev=eventsOn(k),w=null;   // wake times aren't shown any more
+  if(!ts.length&&!ev.length)return "";
   return '<div class="day" id="d'+k.replace(/-/g,"")+'"><div class="dayhead"><span class="d">'+esc(fmtDay(k))+'</span>'+
     (rel?'<span class="rel">'+rel+'</span>':'')+ev.map(e=>'<span class="event">'+esc(e.title)+'</span>').join("")+
     (w&&w.woke?'<span class="rel mono">woke '+esc(t12(w.woke))+(w.slept?' · bed '+esc(t12(w.slept)):'')+'</span>':'')+'</div>'+
@@ -743,7 +763,7 @@ function ideaCard(i,compact){
   return '<article class="idea b-'+esc(i.biz)+' '+st+(u.missed?" missed":"")+'">'+
     '<div class="head"><span class="pill" style="--c:'+u.c+'">'+esc(u.label)+'</span><span class="pill">'+esc(BIZ[i.biz])+'</span>'+(i.collab?'<span class="muted" style="font-size:.78rem">Collab: '+esc(BIZ[i.collab]||i.collab)+'</span>':'')+
     '<span class="pill" style="--c:var(--muted)">'+esc(i.series||i.format)+'</span></div>'+
-    '<h3>'+esc(i.title)+'</h3>'+(i.hook?'<p class="hook">“'+esc(i.hook)+'”</p>':'')+dueLine+
+    '<h3><button class="tlink" data-act="reel" data-id="'+esc(i.id)+'">'+esc(i.title)+'</button>'+(scriptFor(i.id)?' <span class="go">Script ›</span>':'')+'</h3>'+(i.hook?'<p class="hook">“'+esc(i.hook)+'”</p>':'')+dueLine+
     '<div class="meta"><span>'+esc(i.format||"Reel")+(i.length?' · '+esc(i.length):'')+'</span>'+(i.effort?'<span>'+esc(i.effort)+'</span>':'')+'</div>'+
     (!compact&&(i.shots||i.why)?'<details><summary>Shots &amp; why it works</summary><div class="shots">'+(i.shots?'<div>'+esc(i.shots)+'</div>':'')+(i.why?'<div class="muted">'+esc(i.why)+'</div>':'')+'</div></details>':'')+
     '<div class="row">'+actions+'</div></article>';
@@ -781,11 +801,12 @@ function renderToday(){
   const score=i=>{const u=urgency(i);return (u.tier<4?u.tier*1e7+(u.days||0)*1e5:4e7+(w.series.includes(i.series)?0:1)*1e6+Math.min(P.w[i.biz]??2,(P.w[i.collab]??2)+.3)*1e5)+((seed*31+[...i.id].reduce((a,c)=>a+c.charCodeAt(0),0)*17)%9973)};
   const planned=tasksOn(k).some(t=>t.kind==="reel");
   const picks=bank.sort((a,b)=>score(a)-score(b)).slice(0,3);
-  $("pick-why").textContent=planned?"A reel is already on today's list. These are spares if you have time.":(w.series.length?"Deadlines first, then today's slot. Tap one to put it on today's list.":"Sunday is for batch shooting: schedule this week's reels from the Ideas tab.");
+  $("pick-sec").hidden=planned;
+  $("pick-why").textContent=w.series.length?"Pick one of these, or skip today. Tap a title to see its plan and script.":"Sunday is for batch shooting: schedule this week's reels from the Ideas tab.";
   $("pick").innerHTML=picks.length?picks.map(i=>ideaCard(i,true)).join(""):'<div class="empty">Your idea bank is empty. Add ideas in the Ideas tab.</div>';
   let h="";const t=parse(k);
-  for(let i=1;i<=7;i++){const kk=key(addDays(t,i));h+=dayBlock(kk,i===1?"Tomorrow":"")}
-  $("week").innerHTML=h||'<div class="empty">Nothing planned this week yet.</div>';
+  for(let i=1;i<=3;i++){const kk=key(addDays(t,i));h+=dayBlock(kk,i===1?"Tomorrow":"")}
+  $("week").innerHTML=h||'<div class="empty">Nothing planned for the next 3 days.</div>';
 }
 function renderFilters(){
   $("filters").innerHTML=[["all","All"],["san","Sanisha"],["jj","Jainuine"],["pj","Pooja"],["me","Life"]]
@@ -813,8 +834,9 @@ function renderCalendar(){
     '<input type="time" id="d-time" aria-label="Time (optional)"><select id="d-biz" aria-label="Business"><option value="me">Life</option><option value="pj">Pooja Jewellers</option><option value="san">Sanisha</option><option value="jj">Jainuine Jeweller</option></select>'+
     '<button class="btn full" type="submit">Add</button></form>';
   let a="";const t=parse(tk);
-  for(let i=0;i<30;i++){const kk=key(addDays(t,i));a+=dayBlock(kk,i===0?"Today":i===1?"Tomorrow":"in "+i+" days")}
-  $("agenda").innerHTML=a||'<div class="empty">Nothing in the next 30 days yet.</div>';
+  const span=S.long?30:7;
+  for(let i=0;i<span;i++){const kk=key(addDays(t,i));a+=dayBlock(kk,i===0?"Today":i===1?"Tomorrow":"in "+i+" days")}
+  $("agenda").innerHTML=(a||'<div class="empty">Nothing in the next '+span+' days.</div>')+'<button class="toggle" data-act="long">'+(S.long?"Show just this week":"Show the next 30 days")+'</button>';
   $("btn-past").textContent=S.showPast?"Hide past days":"Show past days";
   $("past").hidden=!S.showPast;
   if(S.showPast){const keys=[...new Set([...list("tasks").map(x=>x.date),...Object.keys(S.wake)])].filter(x=>x&&x<tk).sort().reverse();
@@ -922,7 +944,7 @@ async function loadTeam(){
     catch(e){T.err="key";T.bundle=null}}
   const want=T.stack[T.stack.length-1];   // a brief sent seconds ago may not be on the site yet: keep checking
   if(want&&T.bundle&&!T.bundle.docs[want]&&T.tries<9){T.tries++;setTimeout(loadTeam,20000)}
-  if(S.view==="team")renderTeam();
+  render();
 }
 function mdInline(s){
   const code=[];
@@ -1004,13 +1026,37 @@ function renderTeam(){
   $("team-body").innerHTML=h;
 }
 
+/* ================= reel sheet: a reel's plan, and its full script from the Team tab ================= */
+function scriptFor(id){return T.bundle&&T.bundle.scripts&&T.bundle.scripts[id]&&T.bundle.docs[T.bundle.scripts[id]]?T.bundle.scripts[id]:""}
+function openSheet(id){
+  const i=S.ideas[id];if(!i)return;const doc=scriptFor(id);
+  const row=(l,v)=>v?'<div class="kv"><b>'+l+'</b><div>'+esc(v)+'</div></div>':'';
+  const when=i.date?"Planned for "+fmtDay(i.date)+(i.dueTime?" · "+t12(i.dueTime):""):i.due?"Post by "+fmtDay(i.due)+(i.dueTime?" · "+t12(i.dueTime):"")+" · shoot by "+fmtDay(shootBy(i)):"";
+  $("sheet-in").innerHTML='<button class="sheet-close" data-act="close-sheet">Close</button>'+
+    '<div class="row" style="display:flex;gap:6px;flex-wrap:wrap"><span class="pill">'+esc(BIZ[i.biz]||"")+'</span>'+(i.collab?'<span class="pill" style="--c:var(--muted)">Collab: '+esc(BIZ[i.collab]||i.collab)+'</span>':'')+'<span class="pill" style="--c:var(--muted)">'+esc([i.format||"Reel",i.length].filter(Boolean).join(" · "))+'</span></div>'+
+    '<h2>'+esc(i.title)+'</h2>'+(i.hook?'<p class="hook">“'+esc(i.hook)+'”</p>':'')+
+    (doc?'<button class="btn" data-act="script" data-doc="'+esc(doc)+'">Open the full script</button>'
+       :T.key&&T.bundle?'<p class="help">No full script yet. Ask your team: "write the script for '+esc(i.title)+'".</p>'
+       :'<p class="help">Full scripts open from the <b>Team</b> tab. Unlock it once with a link from your Telegram brief.</p>')+
+    row("When",when)+row("Shots",i.shots)+row("Why it works",i.why)+row("Effort",i.effort);
+  $("sheet").hidden=false;document.body.style.overflow="hidden";
+}
+function closeSheet(){$("sheet").hidden=true;document.body.style.overflow=""}
+
 /* ================= events ================= */
 document.addEventListener("click",e=>{
   const b=e.target.closest("[data-act]");if(!b)return;
   const act=b.dataset.act,id=b.dataset.id;
-  if(act==="go"){S.view=b.dataset.v;ls.set("pb-view",S.view);if(S.view==="team")T.stack=[];render();window.scrollTo(0,0);return}
+  if(act==="go"){T.returnTo=null;S.openRow=null;S.view=b.dataset.v;ls.set("pb-view",S.view);if(S.view==="team")T.stack=[];render();window.scrollTo(0,0);return}
+  if(act==="more"){S.openRow=S.openRow===id?null:id;S.pendingDel=null;render();return}
+  if(act==="reel"){openSheet(id);return}
+  if(act==="close-sheet"){closeSheet();return}
+  if(act==="script"){closeSheet();T.returnTo=S.view;S.view="team";ls.set("pb-view","team");T.stack=[b.dataset.doc];T.tries=0;render();window.scrollTo(0,0);return}
+  if(act==="long"){S.long=!S.long;render();return}
   if(act==="doc"){e.preventDefault();T.stack.push(b.dataset.doc);T.tries=0;renderTeam();window.scrollTo(0,0);return}
-  if(act==="back"){T.stack.pop();renderTeam();window.scrollTo(0,0);return}
+  if(act==="back"){T.stack.pop();
+    if(!T.stack.length&&T.returnTo){S.view=T.returnTo;T.returnTo=null;ls.set("pb-view",S.view);render();return}   // back to the reel it came from
+    renderTeam();window.scrollTo(0,0);return}
   if(act==="ttab"){T.tab=b.dataset.v;T.stack=[];renderTeam();return}
   if(act==="copy"){const pre=b.parentNode.querySelector("pre");
     navigator.clipboard.writeText(pre.textContent).then(()=>{b.textContent="Copied ✓";setTimeout(()=>{b.textContent="Copy"},1600)},()=>{b.textContent="Press and hold the text to copy"});return}
@@ -1028,10 +1074,10 @@ document.addEventListener("click",e=>{
     if(t.kind==="reel"&&S.ideas[t.ideaId])ops.push({op:"set",c:"ideas",id:t.ideaId,data:Object.assign({},S.ideas[t.ideaId],{status:t.done?"scheduled":"posted"})});
     write(ops);return}
   if(act==="rtoggle"){const day=b.dataset.day,cur=Object.assign({},S.checks[day]);cur[id]=!cur[id];write([{op:"set",c:"checks",id:day,data:cur}]);return}
-  if(act==="tomorrow"){const t=S.tasks[id];if(!t)return;const nd=key(addDays(parse(t.date),1));const ops=[{op:"update",c:"tasks",id,data:{date:nd}}];
+  if(act==="tomorrow"){S.openRow=null;const t=S.tasks[id];if(!t)return;const nd=key(addDays(parse(t.date),1));const ops=[{op:"update",c:"tasks",id,data:{date:nd}}];
     if(t.kind==="reel"&&S.ideas[t.ideaId])ops.push({op:"set",c:"ideas",id:t.ideaId,data:Object.assign({},S.ideas[t.ideaId],{date:nd})});
     write(ops);return}
-  if(act==="del"){S.pendingDel=null;const t=S.tasks[id];
+  if(act==="del"){S.pendingDel=null;S.openRow=null;const t=S.tasks[id];
     if(t&&t.kind==="reel"&&S.ideas[t.ideaId]){unscheduleIdea(t.ideaId);return}
     write([{op:"delete",c:b.dataset.kind,id}]);return}
   if(act==="sched"){const v=($("dt-"+id)||{}).value;scheduleIdea(id,v||todayKey());return}
@@ -1051,6 +1097,7 @@ document.addEventListener("click",e=>{
   if(act==="go-missed"){S.view="ideas";S.istatus="missed";ls.set("pb-view","ideas");render();window.scrollTo(0,0);return}
   if(act==="rebank"){const i=S.ideas[id];if(!i)return;write([{op:"set",c:"ideas",id,data:Object.assign({},i,{status:"bank",date:""})}]);return}
 });
+$("sheet").addEventListener("click",e=>{if(e.target.id==="sheet")closeSheet()});
 document.addEventListener("submit",e=>{
   if(e.target.id==="add-day"){e.preventDefault();const title=$("d-title").value.trim();if(!title)return;
     write([{op:"set",c:"tasks",id:newId("t"),data:{title,biz:$("d-biz").value,time:$("d-time").value||"",date:S.sel,done:false,kind:"task",source:"me",createdAt:new Date().toISOString()}}]);}
